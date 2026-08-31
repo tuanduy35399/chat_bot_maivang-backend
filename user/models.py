@@ -6,7 +6,7 @@ class User(AbstractUser): #ke thua tu User co san cua Django
     email= models.EmailField(unique=True)
     
     USERNAME_FIELD= 'username'
-    REQUIRED_FIELDS = ['username','email', 'name']
+    REQUIRED_FIELDS = ['email']
     
     def __str__(self):
         return self.username

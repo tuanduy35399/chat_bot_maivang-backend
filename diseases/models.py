@@ -15,7 +15,7 @@ class DiseaseDetail(models.Model):
     class Meta:#khai bao metadata cho model (hien thi tren trang admin)
         verbose_name= 'Loai benh'  #hien thi so it cua model trong trang admin
         verbose_name_plural='So tay benh tren cay mai' #hien thi so nhieu cua model trong trang admin
-        odering=['name'] #sap xep theo ten khi goi DiseaseDetail.objects.all() ma khong can .order_by('name')
+        ordering=['name'] #sap xep theo ten khi goi DiseaseDetail.objects.all() ma khong can .order_by('name')
         
     def __str__(self):
         return self.name
