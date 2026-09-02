@@ -24,39 +24,54 @@ llm = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-def ask(question):
-    docs = retriever.invoke(question) #goi model
+def ask(question, history=None):
 
-    context="\n\n".join(
-        [
-            d.page_content
-            for d in docs
-        ]
+    if history is None:
+        history = []
+
+    docs = retriever.invoke(question)
+
+    context = "\n\n".join(
+        doc.page_content
+        for doc in docs
     )
 
+    history_text = ""
 
+    for message in history:
+        role = message["role"]
+        content = message["content"]
 
-    prompt=f"""
+        if role == "user":
+            history_text += f"Người dùng: {content}\n"
 
-        Bạn là chuyên gia về kiểm thử phần mềm. Chỉ trả lời dựa trên dữ liệu bên dưới. 
-        Nếu dữ liệu không có, hãy nói không tìm thấy thông tin.
-        
-        Hãy trả lời bằng cách:
-        - tóm tắt ý chính
-        - giải thích dễ hiểu
-        - không chép nguyên văn
+        elif role == "assistant":
+            history_text += f"Trợ lý: {content}\n"
 
-        Chỉ sử dụng context.
+    prompt = f"""
+    Bạn là trợ lý AI chuyên về bệnh trên cây mai vàng.
 
-        CONTEXT:
-        {context}
-        CÂU HỎI:
-        {question}
+    Nhiệm vụ:
+    - Trả lời dựa trên thông tin trong phần ngữ cảnh được cung cấp.
+    - Ưu tiên kiến thức từ tài liệu.
+    - Không tự bịa thông tin.
+    - Nếu tài liệu không đủ để kết luận, hãy nói rõ rằng
+    thông tin hiện có chưa đủ.
+    - Trả lời bằng tiếng Việt.
+    - Không chẩn đoán chắc chắn nếu chỉ có dấu hiệu không đủ rõ.
 
+    LỊCH SỬ HỘI THOẠI:
+    {history_text}
+
+    NGỮ CẢNH TỪ CƠ SỞ TRI THỨC:
+    {context}
+
+    CÂU HỎI HIỆN TẠI:
+    {question}
+
+    CÂU TRẢ LỜI:
     """
 
-
-    response=llm.invoke(prompt)
-
+    response = llm.invoke(prompt)
 
     return response.content

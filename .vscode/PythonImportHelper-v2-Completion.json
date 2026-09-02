@@ -121,6 +121,14 @@
         "documentation": {}
     },
     {
+        "label": "path",
+        "importPath": "django.urls",
+        "description": "django.urls",
+        "isExtraImport": true,
+        "detail": "django.urls",
+        "documentation": {}
+    },
+    {
         "label": "SpectacularAPIView",
         "importPath": "drf_spectacular.views",
         "description": "drf_spectacular.views",
@@ -233,6 +241,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "FastAPI",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -246,14 +262,6 @@
         "description": "pydantic",
         "isExtraImport": true,
         "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "ask",
-        "importPath": "fastAPI.old_code.google_model.rag",
-        "description": "fastAPI.old_code.google_model.rag",
-        "isExtraImport": true,
-        "detail": "fastAPI.old_code.google_model.rag",
         "documentation": {}
     },
     {
@@ -323,6 +331,22 @@
         "documentation": {}
     },
     {
+        "label": "migrations",
+        "importPath": "django.db",
+        "description": "django.db",
+        "isExtraImport": true,
+        "detail": "django.db",
+        "documentation": {}
+    },
+    {
+        "label": "models",
+        "importPath": "django.db",
+        "description": "django.db",
+        "isExtraImport": true,
+        "detail": "django.db",
+        "documentation": {}
+    },
+    {
         "label": "models",
         "importPath": "django.db",
         "description": "django.db",
@@ -419,6 +443,30 @@
         "documentation": {}
     },
     {
+        "label": "status",
+        "importPath": "rest_framework",
+        "description": "rest_framework",
+        "isExtraImport": true,
+        "detail": "rest_framework",
+        "documentation": {}
+    },
+    {
+        "label": "serializers",
+        "importPath": "rest_framework",
+        "description": "rest_framework",
+        "isExtraImport": true,
+        "detail": "rest_framework",
+        "documentation": {}
+    },
+    {
+        "label": "generics",
+        "importPath": "rest_framework",
+        "description": "rest_framework",
+        "isExtraImport": true,
+        "detail": "rest_framework",
+        "documentation": {}
+    },
+    {
         "label": "permissions",
         "importPath": "rest_framework",
         "description": "rest_framework",
@@ -459,11 +507,100 @@
         "documentation": {}
     },
     {
-        "label": "render",
-        "importPath": "django.shortcuts",
-        "description": "django.shortcuts",
+        "label": "django.db.models.deletion",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "django.shortcuts",
+        "importPath": "django.db.models.deletion",
+        "description": "django.db.models.deletion",
+        "detail": "django.db.models.deletion",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "django.conf",
+        "description": "django.conf",
+        "isExtraImport": true,
+        "detail": "django.conf",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "django.conf",
+        "description": "django.conf",
+        "isExtraImport": true,
+        "detail": "django.conf",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "django.conf",
+        "description": "django.conf",
+        "isExtraImport": true,
+        "detail": "django.conf",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessage",
+        "importPath": "history.models",
+        "description": "history.models",
+        "isExtraImport": true,
+        "detail": "history.models",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryChat",
+        "importPath": "history.models",
+        "description": "history.models",
+        "isExtraImport": true,
+        "detail": "history.models",
+        "documentation": {}
+    },
+    {
+        "label": "AUTH_USER_MODEL",
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "isExtraImport": true,
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "IsAuthenticated",
+        "importPath": "rest_framework.permissions",
+        "description": "rest_framework.permissions",
+        "isExtraImport": true,
+        "detail": "rest_framework.permissions",
+        "documentation": {}
+    },
+    {
+        "label": "APIView",
+        "importPath": "rest_framework.views",
+        "description": "rest_framework.views",
+        "isExtraImport": true,
+        "detail": "rest_framework.views",
+        "documentation": {}
+    },
+    {
+        "label": "APIView",
+        "importPath": "rest_framework.views",
+        "description": "rest_framework.views",
+        "isExtraImport": true,
+        "detail": "rest_framework.views",
+        "documentation": {}
+    },
+    {
+        "label": "Response",
+        "importPath": "rest_framework.response",
+        "description": "rest_framework.response",
+        "isExtraImport": true,
+        "detail": "rest_framework.response",
+        "documentation": {}
+    },
+    {
+        "label": "Response",
+        "importPath": "rest_framework.response",
+        "description": "rest_framework.response",
+        "isExtraImport": true,
+        "detail": "rest_framework.response",
         "documentation": {}
     },
     {
@@ -542,22 +679,6 @@
         "documentation": {}
     },
     {
-        "label": "Response",
-        "importPath": "rest_framework.response",
-        "description": "rest_framework.response",
-        "isExtraImport": true,
-        "detail": "rest_framework.response",
-        "documentation": {}
-    },
-    {
-        "label": "APIView",
-        "importPath": "rest_framework.views",
-        "description": "rest_framework.views",
-        "isExtraImport": true,
-        "detail": "rest_framework.views",
-        "documentation": {}
-    },
-    {
         "label": "sys",
         "kind": 6,
         "isExtraImport": true,
@@ -625,7 +746,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "MIDDLEWARE = [\n    'django.middleware.security.SecurityMiddleware',\n    'whitenoise.middleware.WhiteNoiseMiddleware',\n    'django.contrib.sessions.middleware.SessionMiddleware',\n    'corsheaders.middleware.CorsMiddleware',\n    'django.middleware.common.CommonMiddleware',\n    'django.middleware.csrf.CsrfViewMiddleware',\n    'django.contrib.auth.middleware.AuthenticationMiddleware',\n    'django.contrib.messages.middleware.MessageMiddleware',\n    'django.middleware.clickjacking.XFrameOptionsMiddleware',",
+        "peekOfCode": "MIDDLEWARE = [\n    'django.middleware.security.SecurityMiddleware',\n    # 'whitenoise.middleware.WhiteNoiseMiddleware',\n    'django.contrib.sessions.middleware.SessionMiddleware',\n    'corsheaders.middleware.CorsMiddleware',\n    'django.middleware.common.CommonMiddleware',\n    'django.middleware.csrf.CsrfViewMiddleware',\n    'django.contrib.auth.middleware.AuthenticationMiddleware',\n    'django.contrib.messages.middleware.MessageMiddleware',\n    'django.middleware.clickjacking.XFrameOptionsMiddleware',",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -706,7 +827,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "AUTH_USER_MODEL = 'user.User'\n# Internationalization\n# https://docs.djangoproject.com/en/6.0/topics/i18n/\nLANGUAGE_CODE = 'en-us'\nTIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\nSTATIC_ROOT = BASE_DIR / \"staticfiles\"",
+        "peekOfCode": "AUTH_USER_MODEL = 'user.User'\n# Internationalization\n# https://docs.djangoproject.com/en/6.0/topics/i18n/\nLANGUAGE_CODE = 'en-us'\nTIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\n# STATIC_ROOT = BASE_DIR / \"staticfiles\"",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -715,7 +836,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "LANGUAGE_CODE = 'en-us'\nTIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\nSTATIC_ROOT = BASE_DIR / \"staticfiles\"",
+        "peekOfCode": "LANGUAGE_CODE = 'en-us'\nTIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\n# STATIC_ROOT = BASE_DIR / \"staticfiles\"\nSTATIC_URL=  \"static/\"",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -724,7 +845,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "TIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\nSTATIC_ROOT = BASE_DIR / \"staticfiles\"",
+        "peekOfCode": "TIME_ZONE = 'UTC'\nUSE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\n# STATIC_ROOT = BASE_DIR / \"staticfiles\"\nSTATIC_URL=  \"static/\"",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -733,7 +854,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "USE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\nSTATIC_ROOT = BASE_DIR / \"staticfiles\"",
+        "peekOfCode": "USE_I18N = True\nUSE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\n# STATIC_ROOT = BASE_DIR / \"staticfiles\"\nSTATIC_URL=  \"static/\"",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -742,16 +863,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "USE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\nSTATIC_ROOT = BASE_DIR / \"staticfiles\"",
-        "detail": "backend.settings",
-        "documentation": {}
-    },
-    {
-        "label": "STATIC_ROOT",
-        "kind": 5,
-        "importPath": "backend.settings",
-        "description": "backend.settings",
-        "peekOfCode": "STATIC_ROOT = BASE_DIR / \"staticfiles\"",
+        "peekOfCode": "USE_TZ = True\n# Static files (CSS, JavaScript, Images)\n# https://docs.djangoproject.com/en/6.0/howto/static-files/\n# STATIC_ROOT = BASE_DIR / \"staticfiles\"\nSTATIC_URL=  \"static/\"",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -760,7 +872,7 @@
         "kind": 5,
         "importPath": "backend.urls",
         "description": "backend.urls",
-        "peekOfCode": "urlpatterns = [\n    path('admin/', admin.site.urls,),\n    path('api/v1/user/', include(\"user.urls\"),),\n    path('api/v1/diseases/', include(\"diseases.urls\"),),\n    path('api/v1/schema/', SpectacularAPIView.as_view(),name='schema'), #buoc phai dat name='schema'\n    path('api/v1/docs/', SpectacularSwaggerView.as_view(),),\n    # path('api/v1/history/', include(\"history.urls\")),\n    # path(\"api-auth/\", include(\"rest_framework.urls\"))\n]",
+        "peekOfCode": "urlpatterns = [\n    path('admin/', admin.site.urls,),\n    path('api/v1/user/', include(\"user.urls\"),),\n    path('api/v1/diseases/', include(\"diseases.urls\"),),\n    path('api/v1/schema/', SpectacularAPIView.as_view(),name='schema'), #buoc phai dat name='schema'\n    path('api/v1/docs/', SpectacularSwaggerView.as_view(),),\n    path('api/v1/history/', include(\"history.urls\")),\n    # path(\"api-auth/\", include(\"rest_framework.urls\"))\n]",
         "detail": "backend.urls",
         "documentation": {}
     },
@@ -778,7 +890,7 @@
         "kind": 5,
         "importPath": "chat.google_model.ingest",
         "description": "chat.google_model.ingest",
-        "peekOfCode": "documents = load_pdf.load()\n#Khuc nay la phan chia thanh cac chunk \n#Cách cũ chia theo dấu \\n không hiệu quả\n# phanchia = RecursiveCharacterTextSplitter(\n#     chunk_size=800,\n#     chunk_overlap= 150,\n# )\nheaders = {\n    (\"#\", \"h1\"),\n    (\"##\", \"h2\"),",
+        "peekOfCode": "documents = load_pdf.load()\nheaders = {\n    (\"#\", \"h1\"),\n    (\"##\", \"h2\"),\n}\nphanchiaMarkDown = MarkdownHeaderTextSplitter(headers_to_split_on=headers, strip_headers= False)\nchunks = phanchiaMarkDown.split_documents(documents)\n#Nhung Googel AI \nembedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf ",
         "detail": "chat.google_model.ingest",
         "documentation": {}
     },
@@ -828,20 +940,38 @@
         "documentation": {}
     },
     {
-        "label": "Question",
+        "label": "HistoryMessage",
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class Question(BaseModel):\n    text:str\n@app.get(\"/\")\ndef home():\n    return {\n        \"status\":\"running\"\n    }\n@app.post(\"/chat\")\ndef chat(\n    q:Question",
+        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
     {
-        "label": "home",
+        "label": "ChatRequest",
+        "kind": 6,
+        "importPath": "chat.google_model.main",
+        "description": "chat.google_model.main",
+        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }",
+        "detail": "chat.google_model.main",
+        "documentation": {}
+    },
+    {
+        "label": "ChatResponse",
+        "kind": 6,
+        "importPath": "chat.google_model.main",
+        "description": "chat.google_model.main",
+        "peekOfCode": "class ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }\n@app.post(\n    \"/chat\",\n    response_model=ChatResponse",
+        "detail": "chat.google_model.main",
+        "documentation": {}
+    },
+    {
+        "label": "root",
         "kind": 2,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "def home():\n    return {\n        \"status\":\"running\"\n    }\n@app.post(\"/chat\")\ndef chat(\n    q:Question\n):\n    answer=ask(\n        q.text",
+        "peekOfCode": "def root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }\n@app.post(\n    \"/chat\",\n    response_model=ChatResponse\n)\ndef chat(request: ChatRequest):\n    history = [",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -850,7 +980,16 @@
         "kind": 2,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "def chat(\n    q:Question\n):\n    answer=ask(\n        q.text\n    )\n    return {\n        \"question\":q.text,\n        \"answer\":answer\n    }",
+        "peekOfCode": "def chat(request: ChatRequest):\n    history = [\n        {\n            \"role\": message.role,\n            \"content\": message.content\n        }\n        for message in request.history\n    ]\n    answer = ask(\n        question=request.question,",
+        "detail": "chat.google_model.main",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "chat.google_model.main",
+        "description": "chat.google_model.main",
+        "peekOfCode": "app = FastAPI(\n    title=\"Mai Vang Chat Service\",\n    version=\"1.0.0\"\n)\nclass HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -868,7 +1007,7 @@
         "kind": 2,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "def ask(question):\n    docs = retriever.invoke(question) #goi model\n    context=\"\\n\\n\".join(\n        [\n            d.page_content\n            for d in docs\n        ]\n    )\n    prompt=f\"\"\"\n        Bạn là chuyên gia về kiểm thử phần mềm. Chỉ trả lời dựa trên dữ liệu bên dưới. ",
+        "peekOfCode": "def ask(question, history=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content\n        for doc in docs\n    )\n    history_text = \"\"\n    for message in history:",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -886,7 +1025,7 @@
         "kind": 5,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "retriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question):\n    docs = retriever.invoke(question) #goi model\n    context=\"\\n\\n\".join(",
+        "peekOfCode": "retriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None):\n    if history is None:\n        history = []",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -895,7 +1034,7 @@
         "kind": 5,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "llm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question):\n    docs = retriever.invoke(question) #goi model\n    context=\"\\n\\n\".join(\n        [\n            d.page_content\n            for d in docs",
+        "peekOfCode": "llm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -1071,12 +1210,120 @@
         "documentation": {}
     },
     {
+        "label": "Migration",
+        "kind": 6,
+        "importPath": "history.migrations.0001_initial",
+        "description": "history.migrations.0001_initial",
+        "peekOfCode": "class Migration(migrations.Migration):\n    initial = True\n    dependencies = [\n        migrations.swappable_dependency(settings.AUTH_USER_MODEL),\n    ]\n    operations = [\n        migrations.CreateModel(\n            name='HistoryChat',\n            fields=[\n                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),",
+        "detail": "history.migrations.0001_initial",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryChatAdmin",
+        "kind": 6,
+        "importPath": "history.admin",
+        "description": "history.admin",
+        "peekOfCode": "class HistoryChatAdmin(admin.ModelAdmin):\n    list_display = [\n        \"id\",\n        \"user\",\n        \"title\",\n        \"created_at\",\n        \"updated_at\",\n    ]\n    list_filter = [\n        \"created_at\",",
+        "detail": "history.admin",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessageAdmin",
+        "kind": 6,
+        "importPath": "history.admin",
+        "description": "history.admin",
+        "peekOfCode": "class ChatMessageAdmin(admin.ModelAdmin):\n    list_display = [\n        \"id\",\n        \"history\",\n        \"role\",\n        \"content_preview\",\n        \"created_at\",\n    ]\n    list_filter = [\n        \"role\",",
+        "detail": "history.admin",
+        "documentation": {}
+    },
+    {
         "label": "HistoryConfig",
         "kind": 6,
         "importPath": "history.apps",
         "description": "history.apps",
         "peekOfCode": "class HistoryConfig(AppConfig):\n    name = 'history'",
         "detail": "history.apps",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryChat",
+        "kind": 6,
+        "importPath": "history.models",
+        "description": "history.models",
+        "peekOfCode": "class HistoryChat(models.Model):\n    user = models.ForeignKey(\n        settings.AUTH_USER_MODEL,\n        on_delete=models.CASCADE,\n        related_name=\"chat_histories\"\n    )\n    title = models.CharField(\n        max_length=255,\n        blank=True,\n        default=\"\",",
+        "detail": "history.models",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessage",
+        "kind": 6,
+        "importPath": "history.models",
+        "description": "history.models",
+        "peekOfCode": "class ChatMessage(models.Model):\n    ROLE_CHOICES = [\n        (\"user\", \"User\",),\n        (\"assistant\", \"Assistant\"),\n    ]\n    history= models.ForeignKey(\n        HistoryChat,\n        on_delete= models.CASCADE,\n        related_name=\"messages\",                           \n    )",
+        "detail": "history.models",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessageSerializer",
+        "kind": 6,
+        "importPath": "history.serializers",
+        "description": "history.serializers",
+        "peekOfCode": "class ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",\n            \"content\",\n            \"created_at\",\n        ]\n        read_only_fields = [",
+        "detail": "history.serializers",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryChatListSerializer",
+        "kind": 6,
+        "importPath": "history.serializers",
+        "description": "history.serializers",
+        "peekOfCode": "class HistoryChatListSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = HistoryChat\n        fields = [\n            \"id\",\n            \"title\",\n            \"created_at\",\n            \"updated_at\",\n        ]\n        read_only_fields = [",
+        "detail": "history.serializers",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryChatDetailSerializer",
+        "kind": 6,
+        "importPath": "history.serializers",
+        "description": "history.serializers",
+        "peekOfCode": "class HistoryChatDetailSerializer(serializers.ModelSerializer):\n    messages = ChatMessageSerializer(\n        many=True,\n        read_only=True\n    )\n    class Meta:\n        model = HistoryChat\n        fields = [\n            \"id\",\n            \"title\",",
+        "detail": "history.serializers",
+        "documentation": {}
+    },
+    {
+        "label": "urlpatterns",
+        "kind": 5,
+        "importPath": "history.urls",
+        "description": "history.urls",
+        "peekOfCode": "urlpatterns = [\n    path(\n        \"\",\n        HistoryListCreateView.as_view(),\n        name=\"history-list-create\"\n    ),\n    path(\n        \"<int:pk>/\",\n        HistoryDetailView.as_view(),\n        name=\"history-detail\"",
+        "detail": "history.urls",
+        "documentation": {}
+    },
+    {
+        "label": "ChatView",
+        "kind": 6,
+        "importPath": "history.views",
+        "description": "history.views",
+        "peekOfCode": "class ChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    def post(self, request, pk):\n        serializer = ChatMessageSerializer(\n            data=request.data\n        )\n        serializer.is_valid(\n            raise_exception=True",
+        "detail": "history.views",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryListCreateView",
+        "kind": 6,
+        "importPath": "history.views",
+        "description": "history.views",
+        "peekOfCode": "class HistoryListCreateView(generics.ListCreateAPIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    def get_queryset(self):\n        return HistoryChat.objects.filter(\n            user=self.request.user\n        ).order_by(\"-updated_at\")\n    def get_serializer_class(self):\n        return HistoryChatListSerializer",
+        "detail": "history.views",
+        "documentation": {}
+    },
+    {
+        "label": "HistoryDetailView",
+        "kind": 6,
+        "importPath": "history.views",
+        "description": "history.views",
+        "peekOfCode": "class HistoryDetailView(generics.RetrieveUpdateDestroyAPIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    serializer_class = HistoryChatDetailSerializer\n    def get_queryset(self):\n        return HistoryChat.objects.filter(\n            user=self.request.user\n        )",
+        "detail": "history.views",
         "documentation": {}
     },
     {

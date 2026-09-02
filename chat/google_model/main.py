@@ -1,37 +1,61 @@
-from fastapi import FastAPI
+from typing import List
 
+from fastapi import FastAPI
 from pydantic import BaseModel
 
-
-from fastAPI.old_code.google_model.rag import ask
-
+from .rag import ask
 
 
-app=FastAPI(
-    title="Mai Vang Vinahouse RAG API"
+app = FastAPI(
+    title="Mai Vang Chat Service",
+    version="1.0.0"
 )
 
-class Question(BaseModel):
 
-    text:str
+class HistoryMessage(BaseModel):
+
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+
+    question: str
+    history: List[HistoryMessage] = []
+
+
+class ChatResponse(BaseModel):
+
+    answer: str
+
 
 @app.get("/")
-def home():
+def root():
 
     return {
-        "status":"running"
+        "message": "Mai Vang Chat Service is running"
     }
 
 
+@app.post(
+    "/chat",
+    response_model=ChatResponse
+)
+def chat(request: ChatRequest):
 
-@app.post("/chat")
-def chat(
-    q:Question
-):
-    answer=ask(
-        q.text
+    history = [
+        {
+            "role": message.role,
+            "content": message.content
+        }
+        for message in request.history
+    ]
+
+    answer = ask(
+        question=request.question,
+        history=history
     )
+
     return {
-        "question":q.text,
-        "answer":answer
+        "answer": answer
     }

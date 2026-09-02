@@ -10,12 +10,7 @@ load_dotenv()
 load_pdf= PyPDFLoader("../data/test.pdf")
 documents = load_pdf.load()
 
-#Khuc nay la phan chia thanh cac chunk 
-#Cách cũ chia theo dấu \n không hiệu quả
-# phanchia = RecursiveCharacterTextSplitter(
-#     chunk_size=800,
-#     chunk_overlap= 150,
-# )
+
 headers = {
     ("#", "h1"),
     ("##", "h2"),
