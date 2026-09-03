@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain_google_genai import (ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings)
@@ -10,9 +10,11 @@ load_dotenv()
 embedding = GoogleGenerativeAIEmbeddings(
     model = "models/gemini-embedding-2"
 )
-db= Chroma(
-    persist_directory="vector_db",
-    embedding_function=embedding
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+db = Chroma(
+    persist_directory=str(PROJECT_ROOT / "vector_db"),
+    embedding_function=embedding,
 )
 retriever = db.as_retriever(
     search_kwargs={"k":3}

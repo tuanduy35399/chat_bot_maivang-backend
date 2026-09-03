@@ -5,13 +5,16 @@ from .models import HistoryChat, ChatMessage
 from .serializers import (
     HistoryChatListSerializer,
     HistoryChatDetailSerializer,
-    ChatMessageSerializer
+    ChatMessageSerializer,
+    ChatRequestSerializer
 )
 
 from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
+import requests
 
 
 class ChatView(APIView):
@@ -20,9 +23,14 @@ class ChatView(APIView):
         IsAuthenticated
     ]
 
+    @extend_schema(
+        request=ChatRequestSerializer,
+        responses={status.HTTP_200_OK: dict},
+        description="Gửi câu hỏi tới AI và lưu câu hỏi/câu trả lời vào lịch sử chat.",
+    )
     def post(self, request, pk):
 
-        serializer = ChatMessageSerializer(
+        serializer = ChatRequestSerializer(
             data=request.data
         )
 
@@ -32,7 +40,6 @@ class ChatView(APIView):
 
         question = serializer.validated_data["question"]
 
-        # 1. Chỉ lấy history của user hiện tại
         try:
             history = HistoryChat.objects.get(
                 id=pk,
@@ -48,14 +55,14 @@ class ChatView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 2. Lưu câu hỏi của user
+        #Lưu câu hỏi của user
         ChatMessage.objects.create(
             history=history,
             role="user",
             content=question
         )
 
-        # 3. Lấy 10 message gần nhất
+        # Lấy 10 message gần nhất
         messages = list(
             history.messages
             .order_by("-created_at")[:10]
@@ -63,7 +70,6 @@ class ChatView(APIView):
 
         messages.reverse()
 
-        # 4. Chuyển thành history cho FastAPI
         chat_history = [
             {
                 "role": message.role,
@@ -72,39 +78,44 @@ class ChatView(APIView):
             for message in messages
         ]
 
-        # 5. Gọi FastAPI
-        fastapi_url = getattr(
-            settings,
-            "FASTAPI_CHAT_URL",
-            "http://localhost:9000/chat"
-        )
+        # Gọi qua bên FastAPI
+        fastapi_url = settings.FASTAPI_CHAT_URL
 
         try:
-
             response = requests.post(
                 fastapi_url,
                 json={
                     "question": question,
-                    "history": chat_history
+                    "history": chat_history,
                 },
-                timeout=120
+                timeout=settings.FASTAPI_TIMEOUT,
             )
-
             response.raise_for_status()
-
             data = response.json()
 
+        except requests.exceptions.Timeout:
+            return Response(
+                {
+                    "detail": "AI service phản hồi quá thời gian cho phép."
+                },
+                status=status.HTTP_504_GATEWAY_TIMEOUT,
+            )
         except requests.exceptions.RequestException:
-
             return Response(
                 {
                     "detail": "Không thể kết nối tới AI service."
                 },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except ValueError:
+            return Response(
+                {
+                    "detail": "AI service trả về dữ liệu không hợp lệ."
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        # 6. Lấy answer
-        answer = data.get("answer")
+        answer = data.get("answer") if isinstance(data, dict) else None
 
         if not answer:
 
@@ -115,14 +126,13 @@ class ChatView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
-        # 7. Lưu câu trả lời
         ChatMessage.objects.create(
             history=history,
             role="assistant",
             content=answer
         )
+        history.save(update_fields=["updated_at"])
 
-        # 8. Trả về app
         return Response(
             {
                 "question": question,

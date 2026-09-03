@@ -25,11 +25,11 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -106,6 +106,14 @@
     },
     {
         "label": "path",
+        "importPath": "django.urls",
+        "description": "django.urls",
+        "isExtraImport": true,
+        "detail": "django.urls",
+        "documentation": {}
+    },
+    {
+        "label": "reverse",
         "importPath": "django.urls",
         "description": "django.urls",
         "isExtraImport": true,
@@ -249,11 +257,11 @@
         "documentation": {}
     },
     {
-        "label": "FastAPI",
-        "importPath": "fastapi",
-        "description": "fastapi",
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
         "isExtraImport": true,
-        "detail": "fastapi",
+        "detail": "pydantic",
         "documentation": {}
     },
     {
@@ -265,11 +273,11 @@
         "documentation": {}
     },
     {
-        "label": "genai",
-        "importPath": "google",
-        "description": "google",
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
         "isExtraImport": true,
-        "detail": "google",
+        "detail": "fastapi",
         "documentation": {}
     },
     {
@@ -499,14 +507,6 @@
         "documentation": {}
     },
     {
-        "label": "TestCase",
-        "importPath": "django.test",
-        "description": "django.test",
-        "isExtraImport": true,
-        "detail": "django.test",
-        "documentation": {}
-    },
-    {
         "label": "django.db.models.deletion",
         "kind": 6,
         "isExtraImport": true,
@@ -564,6 +564,30 @@
         "documentation": {}
     },
     {
+        "label": "patch",
+        "importPath": "unittest.mock",
+        "description": "unittest.mock",
+        "isExtraImport": true,
+        "detail": "unittest.mock",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_model",
+        "importPath": "django.contrib.auth",
+        "description": "django.contrib.auth",
+        "isExtraImport": true,
+        "detail": "django.contrib.auth",
+        "documentation": {}
+    },
+    {
+        "label": "APITestCase",
+        "importPath": "rest_framework.test",
+        "description": "rest_framework.test",
+        "isExtraImport": true,
+        "detail": "rest_framework.test",
+        "documentation": {}
+    },
+    {
         "label": "IsAuthenticated",
         "importPath": "rest_framework.permissions",
         "description": "rest_framework.permissions",
@@ -601,6 +625,23 @@
         "description": "rest_framework.response",
         "isExtraImport": true,
         "detail": "rest_framework.response",
+        "documentation": {}
+    },
+    {
+        "label": "extend_schema",
+        "importPath": "drf_spectacular.utils",
+        "description": "drf_spectacular.utils",
+        "isExtraImport": true,
+        "detail": "drf_spectacular.utils",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
         "documentation": {}
     },
     {
@@ -755,7 +796,25 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "CORS_ALLOWED_ORIGINS = [\n    origin.strip()\n    for origin in os.getenv(\n        \"CORS_ALLOWED_ORIGINS\",\n        \"http://localhost:5174\"\n    ).split(\",\")\n    if origin.strip()\n]\nREST_FRAMEWORK = {\n    #Phan quyen ",
+        "peekOfCode": "CORS_ALLOWED_ORIGINS = [\n    origin.strip()\n    for origin in os.getenv(\n        \"CORS_ALLOWED_ORIGINS\",\n        \"http://localhost:5174\"\n    ).split(\",\")\n    if origin.strip()\n]\nFASTAPI_CHAT_URL = os.getenv(\n    \"FASTAPI_CHAT_URL\",",
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "FASTAPI_CHAT_URL",
+        "kind": 5,
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "peekOfCode": "FASTAPI_CHAT_URL = os.getenv(\n    \"FASTAPI_CHAT_URL\",\n    \"http://127.0.0.1:8004/chat\"\n)\nFASTAPI_TIMEOUT = float(os.getenv(\"FASTAPI_TIMEOUT\", \"120\"))\nREST_FRAMEWORK = {\n    #Phan quyen \n    \"DEFAULT_PERMISSION_CLASSES\": (\n        \"rest_framework.permissions.IsAuthenticated\",\n    ),",
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "FASTAPI_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "peekOfCode": "FASTAPI_TIMEOUT = float(os.getenv(\"FASTAPI_TIMEOUT\", \"120\"))\nREST_FRAMEWORK = {\n    #Phan quyen \n    \"DEFAULT_PERMISSION_CLASSES\": (\n        \"rest_framework.permissions.IsAuthenticated\",\n    ),\n    #Xac thuc \n    'DEFAULT_AUTHENTICATION_CLASSES': (\n        'rest_framework_simplejwt.authentication.JWTAuthentication',\n    ),",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -944,7 +1003,7 @@
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():",
+        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -953,7 +1012,7 @@
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }",
+        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -989,17 +1048,8 @@
         "kind": 5,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "app = FastAPI(\n    title=\"Mai Vang Chat Service\",\n    version=\"1.0.0\"\n)\nclass HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = []",
+        "peekOfCode": "app = FastAPI(\n    title=\"Mai Vang Chat Service\",\n    version=\"1.0.0\"\n)\nclass HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)",
         "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "client",
-        "kind": 5,
-        "importPath": "chat.google_model.model_testAPI",
-        "description": "chat.google_model.model_testAPI",
-        "peekOfCode": "client = genai.Client(\n    api_key=os.getenv(\"GOOGLE_API_KEY\")\n)\nfor model in client.models.list():\n    print(model.name)",
-        "detail": "chat.google_model.model_testAPI",
         "documentation": {}
     },
     {
@@ -1016,7 +1066,25 @@
         "kind": 5,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "embedding = GoogleGenerativeAIEmbeddings(\n    model = \"models/gemini-embedding-2\"\n)\ndb= Chroma(\n    persist_directory=\"vector_db\",\n    embedding_function=embedding\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)",
+        "peekOfCode": "embedding = GoogleGenerativeAIEmbeddings(\n    model = \"models/gemini-embedding-2\"\n)\nPROJECT_ROOT = Path(__file__).resolve().parents[2]\ndb = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}",
+        "detail": "chat.google_model.rag",
+        "documentation": {}
+    },
+    {
+        "label": "PROJECT_ROOT",
+        "kind": 5,
+        "importPath": "chat.google_model.rag",
+        "description": "chat.google_model.rag",
+        "peekOfCode": "PROJECT_ROOT = Path(__file__).resolve().parents[2]\ndb = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",",
+        "detail": "chat.google_model.rag",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "chat.google_model.rag",
+        "description": "chat.google_model.rag",
+        "peekOfCode": "db = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -1264,6 +1332,15 @@
         "documentation": {}
     },
     {
+        "label": "ChatRequestSerializer",
+        "kind": 6,
+        "importPath": "history.serializers",
+        "description": "history.serializers",
+        "peekOfCode": "class ChatRequestSerializer(serializers.Serializer):\n    question = serializers.CharField(\n        required=True\n    )\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",",
+        "detail": "history.serializers",
+        "documentation": {}
+    },
+    {
         "label": "ChatMessageSerializer",
         "kind": 6,
         "importPath": "history.serializers",
@@ -1291,6 +1368,15 @@
         "documentation": {}
     },
     {
+        "label": "ChatViewTests",
+        "kind": 6,
+        "importPath": "history.tests",
+        "description": "history.tests",
+        "peekOfCode": "class ChatViewTests(APITestCase):\n    def setUp(self):\n        self.user = get_user_model().objects.create_user(\n            username=\"chat-user\",\n            name=\"Chat User\",\n            email=\"chat-user@example.com\",\n            password=\"Strong-password-123!\",\n        )\n        self.other_user = get_user_model().objects.create_user(\n            username=\"other-user\",",
+        "detail": "history.tests",
+        "documentation": {}
+    },
+    {
         "label": "urlpatterns",
         "kind": 5,
         "importPath": "history.urls",
@@ -1304,7 +1390,7 @@
         "kind": 6,
         "importPath": "history.views",
         "description": "history.views",
-        "peekOfCode": "class ChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    def post(self, request, pk):\n        serializer = ChatMessageSerializer(\n            data=request.data\n        )\n        serializer.is_valid(\n            raise_exception=True",
+        "peekOfCode": "class ChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    @extend_schema(\n        request=ChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=\"Gửi câu hỏi tới AI và lưu câu hỏi/câu trả lời vào lịch sử chat.\",\n    )\n    def post(self, request, pk):",
         "detail": "history.views",
         "documentation": {}
     },

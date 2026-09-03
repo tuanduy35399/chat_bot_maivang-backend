@@ -78,6 +78,12 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+FASTAPI_CHAT_URL = os.getenv(
+    "FASTAPI_CHAT_URL",
+    "http://127.0.0.1:8004/chat"
+)
+FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "120"))
+
 REST_FRAMEWORK = {
     
     #Phan quyen 
