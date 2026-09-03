@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import HistoryChat, ChatMessage
 
 
+class ChatRequestSerializer(serializers.Serializer):
+    question = serializers.CharField(
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage

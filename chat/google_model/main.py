@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .rag import ask
 
@@ -21,7 +21,7 @@ class HistoryMessage(BaseModel):
 class ChatRequest(BaseModel):
 
     question: str
-    history: List[HistoryMessage] = []
+    history: List[HistoryMessage] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
