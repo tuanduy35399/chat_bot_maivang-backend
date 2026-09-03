@@ -249,7 +249,24 @@
         "documentation": {}
     },
     {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -273,11 +290,52 @@
         "documentation": {}
     },
     {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "FastAPI",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
         "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Form",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
         "documentation": {}
     },
     {
@@ -805,7 +863,16 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "FASTAPI_CHAT_URL = os.getenv(\n    \"FASTAPI_CHAT_URL\",\n    \"http://127.0.0.1:8004/chat\"\n)\nFASTAPI_TIMEOUT = float(os.getenv(\"FASTAPI_TIMEOUT\", \"120\"))\nREST_FRAMEWORK = {\n    #Phan quyen \n    \"DEFAULT_PERMISSION_CLASSES\": (\n        \"rest_framework.permissions.IsAuthenticated\",\n    ),",
+        "peekOfCode": "FASTAPI_CHAT_URL = os.getenv(\n    \"FASTAPI_CHAT_URL\",\n    \"http://127.0.0.1:8004/chat\"\n)\nFASTAPI_IMAGE_CHAT_URL = os.getenv(\n    \"FASTAPI_IMAGE_CHAT_URL\",\n    FASTAPI_CHAT_URL.rstrip(\"/\") + \"/image\"\n)\nFASTAPI_TIMEOUT = float(os.getenv(\"FASTAPI_TIMEOUT\", \"120\"))\nREST_FRAMEWORK = {",
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "FASTAPI_IMAGE_CHAT_URL",
+        "kind": 5,
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "peekOfCode": "FASTAPI_IMAGE_CHAT_URL = os.getenv(\n    \"FASTAPI_IMAGE_CHAT_URL\",\n    FASTAPI_CHAT_URL.rstrip(\"/\") + \"/image\"\n)\nFASTAPI_TIMEOUT = float(os.getenv(\"FASTAPI_TIMEOUT\", \"120\"))\nREST_FRAMEWORK = {\n    #Phan quyen \n    \"DEFAULT_PERMISSION_CLASSES\": (\n        \"rest_framework.permissions.IsAuthenticated\",\n    ),",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -1003,7 +1070,7 @@
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():",
+        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -1012,7 +1079,7 @@
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }",
+        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(\n    image: UploadFile = File(...),\n    question: str = Form(\"\"),\n    history: str = Form(\"[]\"),",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -1021,7 +1088,7 @@
         "kind": 6,
         "importPath": "chat.google_model.main",
         "description": "chat.google_model.main",
-        "peekOfCode": "class ChatResponse(BaseModel):\n    answer: str\n@app.get(\"/\")\ndef root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }\n@app.post(\n    \"/chat\",\n    response_model=ChatResponse",
+        "peekOfCode": "class ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(\n    image: UploadFile = File(...),\n    question: str = Form(\"\"),\n    history: str = Form(\"[]\"),\n):\n    image_bytes = await image.read()\n    try:",
         "detail": "chat.google_model.main",
         "documentation": {}
     },
@@ -1057,7 +1124,7 @@
         "kind": 2,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "def ask(question, history=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content\n        for doc in docs\n    )\n    history_text = \"\"\n    for message in history:",
+        "peekOfCode": "def ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content\n        for doc in docs\n    )\n    history_text = \"\"\n    for message in history:",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -1093,7 +1160,7 @@
         "kind": 5,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "retriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None):\n    if history is None:\n        history = []",
+        "peekOfCode": "retriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []",
         "detail": "chat.google_model.rag",
         "documentation": {}
     },
@@ -1102,8 +1169,44 @@
         "kind": 5,
         "importPath": "chat.google_model.rag",
         "description": "chat.google_model.rag",
-        "peekOfCode": "llm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content",
+        "peekOfCode": "llm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content",
         "detail": "chat.google_model.rag",
+        "documentation": {}
+    },
+    {
+        "label": "YoloOnnxPlugin",
+        "kind": 6,
+        "importPath": "chat.google_model.yolo_plugin",
+        "description": "chat.google_model.yolo_plugin",
+        "peekOfCode": "class YoloOnnxPlugin:\n    def __init__(self, model_path: str | None = None):\n        self.model_path = model_path or os.getenv(\"YOLO_MODEL_PATH\", \"\")\n        self._session = None\n    def _load(self):\n        if not self.model_path:\n            raise RuntimeError(\"YOLO_MODEL_PATH chưa được cấu hình.\")\n        if not os.path.isfile(self.model_path):\n            raise RuntimeError(f\"Không tìm thấy YOLO ONNX model: {self.model_path}\")\n        if self._session is None:",
+        "detail": "chat.google_model.yolo_plugin",
+        "documentation": {}
+    },
+    {
+        "label": "detect",
+        "kind": 2,
+        "importPath": "chat.google_model.yolo_plugin",
+        "description": "chat.google_model.yolo_plugin",
+        "peekOfCode": "def detect(image_bytes: bytes) -> list[dict[str, Any]]:\n    return _detector.predict(image_bytes)\ndef format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections\n    )",
+        "detail": "chat.google_model.yolo_plugin",
+        "documentation": {}
+    },
+    {
+        "label": "format_detections",
+        "kind": 2,
+        "importPath": "chat.google_model.yolo_plugin",
+        "description": "chat.google_model.yolo_plugin",
+        "peekOfCode": "def format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections\n    )",
+        "detail": "chat.google_model.yolo_plugin",
+        "documentation": {}
+    },
+    {
+        "label": "_detector",
+        "kind": 5,
+        "importPath": "chat.google_model.yolo_plugin",
+        "description": "chat.google_model.yolo_plugin",
+        "peekOfCode": "_detector = YoloOnnxPlugin()\ndef detect(image_bytes: bytes) -> list[dict[str, Any]]:\n    return _detector.predict(image_bytes)\ndef format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections",
+        "detail": "chat.google_model.yolo_plugin",
         "documentation": {}
     },
     {
@@ -1336,7 +1439,16 @@
         "kind": 6,
         "importPath": "history.serializers",
         "description": "history.serializers",
-        "peekOfCode": "class ChatRequestSerializer(serializers.Serializer):\n    question = serializers.CharField(\n        required=True\n    )\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",",
+        "peekOfCode": "class ChatRequestSerializer(serializers.Serializer):\n    question = serializers.CharField(\n        required=True\n    )\nclass ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage",
+        "detail": "history.serializers",
+        "documentation": {}
+    },
+    {
+        "label": "ImageChatRequestSerializer",
+        "kind": 6,
+        "importPath": "history.serializers",
+        "description": "history.serializers",
+        "peekOfCode": "class ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",\n            \"content\",",
         "detail": "history.serializers",
         "documentation": {}
     },
@@ -1391,6 +1503,15 @@
         "importPath": "history.views",
         "description": "history.views",
         "peekOfCode": "class ChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    @extend_schema(\n        request=ChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=\"Gửi câu hỏi tới AI và lưu câu hỏi/câu trả lời vào lịch sử chat.\",\n    )\n    def post(self, request, pk):",
+        "detail": "history.views",
+        "documentation": {}
+    },
+    {
+        "label": "ImageChatView",
+        "kind": 6,
+        "importPath": "history.views",
+        "description": "history.views",
+        "peekOfCode": "class ImageChatView(APIView):\n    permission_classes = [IsAuthenticated]\n    @extend_schema(\n        request=ImageChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=\"Gửi ảnh (và tùy chọn câu hỏi) qua YOLO rồi RAG.\",\n    )\n    def post(self, request, pk):\n        serializer = ImageChatRequestSerializer(data=request.data)\n        serializer.is_valid(raise_exception=True)",
         "detail": "history.views",
         "documentation": {}
     },
