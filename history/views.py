@@ -1,14 +1,17 @@
+import requests
+
+from django.conf import settings
+from django.db import transaction
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from .models import HistoryChat, ChatMessage
 from .serializers import (
+    ChatRequestSerializer,
     HistoryChatListSerializer,
     HistoryChatDetailSerializer,
-    ChatMessageSerializer
 )
 
-from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,7 +25,7 @@ class ChatView(APIView):
 
     def post(self, request, pk):
 
-        serializer = ChatMessageSerializer(
+        serializer = ChatRequestSerializer(
             data=request.data
         )
 
@@ -48,14 +51,7 @@ class ChatView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 2. Lưu câu hỏi của user
-        ChatMessage.objects.create(
-            history=history,
-            role="user",
-            content=question
-        )
-
-        # 3. Lấy 10 message gần nhất
+        # Chỉ gửi các tin nhắn trước câu hỏi hiện tại cho AI.
         messages = list(
             history.messages
             .order_by("-created_at")[:10]
@@ -63,7 +59,7 @@ class ChatView(APIView):
 
         messages.reverse()
 
-        # 4. Chuyển thành history cho FastAPI
+        # Chuyển thành history cho FastAPI
         chat_history = [
             {
                 "role": message.role,
@@ -72,7 +68,7 @@ class ChatView(APIView):
             for message in messages
         ]
 
-        # 5. Gọi FastAPI
+        # Gọi FastAPI
         fastapi_url = getattr(
             settings,
             "FASTAPI_CHAT_URL",
@@ -80,7 +76,6 @@ class ChatView(APIView):
         )
 
         try:
-
             response = requests.post(
                 fastapi_url,
                 json={
@@ -91,11 +86,7 @@ class ChatView(APIView):
             )
 
             response.raise_for_status()
-
-            data = response.json()
-
         except requests.exceptions.RequestException:
-
             return Response(
                 {
                     "detail": "Không thể kết nối tới AI service."
@@ -103,8 +94,18 @@ class ChatView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        # 6. Lấy answer
-        answer = data.get("answer")
+        try:
+            data = response.json()
+        except ValueError:
+            return Response(
+                {
+                    "detail": "AI service trả về dữ liệu không hợp lệ."
+                },
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        # Lấy answer
+        answer = data.get("answer") if isinstance(data, dict) else None
 
         if not answer:
 
@@ -115,12 +116,23 @@ class ChatView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
-        # 7. Lưu câu trả lời
-        ChatMessage.objects.create(
-            history=history,
-            role="assistant",
-            content=answer
-        )
+        # Chỉ lưu cặp tin nhắn sau khi AI trả lời thành công.
+        with transaction.atomic():
+            ChatMessage.objects.create(
+                history=history,
+                role="user",
+                content=question
+            )
+            ChatMessage.objects.create(
+                history=history,
+                role="assistant",
+                content=answer
+            )
+            update_fields = ["updated_at"]
+            if not history.title:
+                history.title = question[:255]
+                update_fields.append("title")
+            history.save(update_fields=update_fields)
 
         # 8. Trả về app
         return Response(

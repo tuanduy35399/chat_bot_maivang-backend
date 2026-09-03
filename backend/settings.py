@@ -166,6 +166,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 AUTH_USER_MODEL = 'user.User'
+FASTAPI_CHAT_URL = os.getenv(
+    "FASTAPI_CHAT_URL",
+    "http://localhost:9000/chat",
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
