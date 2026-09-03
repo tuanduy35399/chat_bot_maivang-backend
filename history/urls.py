@@ -4,6 +4,7 @@ from .views import (
     HistoryListCreateView,
     HistoryDetailView,
     ChatView,
+    ImageChatView,
 )
 
 
@@ -25,5 +26,11 @@ urlpatterns = [
         "<int:pk>/chat/",
         ChatView.as_view(),
         name="history-chat"
+    ),
+
+    path(
+        "<int:pk>/chat/image/",
+        ImageChatView.as_view(),
+        name="history-image-chat"
     ),
 ]

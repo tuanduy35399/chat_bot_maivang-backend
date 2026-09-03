@@ -26,7 +26,7 @@ llm = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-def ask(question, history=None):
+def ask(question, history=None, system_prompt=None):
 
     if history is None:
         history = []
@@ -50,8 +50,10 @@ def ask(question, history=None):
         elif role == "assistant":
             history_text += f"Trợ lý: {content}\n"
 
+    system_instruction = system_prompt or "Bạn là trợ lý AI chuyên về bệnh trên cây mai vàng."
+
     prompt = f"""
-    Bạn là trợ lý AI chuyên về bệnh trên cây mai vàng.
+    {system_instruction}
 
     Nhiệm vụ:
     - Trả lời dựa trên thông tin trong phần ngữ cảnh được cung cấp.

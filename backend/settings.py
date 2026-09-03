@@ -82,6 +82,10 @@ FASTAPI_CHAT_URL = os.getenv(
     "FASTAPI_CHAT_URL",
     "http://127.0.0.1:8004/chat"
 )
+FASTAPI_IMAGE_CHAT_URL = os.getenv(
+    "FASTAPI_IMAGE_CHAT_URL",
+    FASTAPI_CHAT_URL.rstrip("/") + "/image"
+)
 FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "120"))
 
 REST_FRAMEWORK = {

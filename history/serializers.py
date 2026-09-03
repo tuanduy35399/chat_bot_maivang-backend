@@ -9,6 +9,12 @@ class ChatRequestSerializer(serializers.Serializer):
     )
 
 
+class ImageChatRequestSerializer(serializers.Serializer):
+
+    image = serializers.ImageField(required=True)
+    question = serializers.CharField(required=False, allow_blank=True)
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
