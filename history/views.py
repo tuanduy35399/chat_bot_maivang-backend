@@ -2,7 +2,7 @@ import json
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import HistoryChat, ChatMessage
 from .serializers import (
     HistoryChatListSerializer,
@@ -146,9 +146,13 @@ class ChatView(APIView):
         )
 class ImageChatView(APIView):
 
-    permission_classes = [
-        IsAuthenticated
+    permission_classes = [IsAuthenticated]
+
+    parser_classes = [
+        MultiPartParser,
+        FormParser
     ]
+
 
     @extend_schema(
         request=ImageChatRequestSerializer,

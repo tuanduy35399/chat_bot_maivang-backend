@@ -11,7 +11,7 @@ class ChatRequestSerializer(serializers.Serializer):
 
 class ImageChatRequestSerializer(serializers.Serializer):
 
-    image = serializers.ImageField(required=True)
+    image = serializers.ImageField(required=True, use_url=False)
     question = serializers.CharField(required=False, allow_blank=True)
 
 

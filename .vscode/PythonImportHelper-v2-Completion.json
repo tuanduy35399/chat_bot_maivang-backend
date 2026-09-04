@@ -435,6 +435,22 @@
         "documentation": {}
     },
     {
+        "label": "MultiPartParser",
+        "importPath": "rest_framework.parsers",
+        "description": "rest_framework.parsers",
+        "isExtraImport": true,
+        "detail": "rest_framework.parsers",
+        "documentation": {}
+    },
+    {
+        "label": "FormParser",
+        "importPath": "rest_framework.parsers",
+        "description": "rest_framework.parsers",
+        "isExtraImport": true,
+        "detail": "rest_framework.parsers",
+        "documentation": {}
+    },
+    {
         "label": "APIView",
         "importPath": "rest_framework.views",
         "description": "rest_framework.views",
@@ -706,7 +722,7 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "SPECTACULAR_SETTINGS = {\n    'TITLE': 'Backend App Cay Mai', \n    'DESCRIPTION': 'API cho app quét bệnh lá mai', \n    'VERSION': '1.0.0'\n} \nROOT_URLCONF = 'backend.urls'\nTEMPLATES = [\n    {\n        'BACKEND': 'django.template.backends.django.DjangoTemplates',\n        'DIRS': [],",
+        "peekOfCode": "SPECTACULAR_SETTINGS = {\n    'TITLE': 'Backend App Cay Mai', \n    'DESCRIPTION': 'API cho app quét bệnh lá mai', \n    'VERSION': '1.0.0',\n    \"COMPONENT_SPLIT_REQUEST\": True,\n} \nROOT_URLCONF = 'backend.urls'\nTEMPLATES = [\n    {\n        'BACKEND': 'django.template.backends.django.DjangoTemplates',",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -949,7 +965,7 @@
         "kind": 6,
         "importPath": "history.serializers",
         "description": "history.serializers",
-        "peekOfCode": "class ChatRequestSerializer(serializers.Serializer):\n    question = serializers.CharField(\n        required=True\n    )\nclass ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage",
+        "peekOfCode": "class ChatRequestSerializer(serializers.Serializer):\n    question = serializers.CharField(\n        required=True\n    )\nclass ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True, use_url=False)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage",
         "detail": "history.serializers",
         "documentation": {}
     },
@@ -958,7 +974,7 @@
         "kind": 6,
         "importPath": "history.serializers",
         "description": "history.serializers",
-        "peekOfCode": "class ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",\n            \"content\",",
+        "peekOfCode": "class ImageChatRequestSerializer(serializers.Serializer):\n    image = serializers.ImageField(required=True, use_url=False)\n    question = serializers.CharField(required=False, allow_blank=True)\nclass ChatMessageSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = ChatMessage\n        fields = [\n            \"id\",\n            \"role\",\n            \"content\",",
         "detail": "history.serializers",
         "documentation": {}
     },
@@ -1021,7 +1037,7 @@
         "kind": 6,
         "importPath": "history.views",
         "description": "history.views",
-        "peekOfCode": "class ImageChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    @extend_schema(\n        request=ImageChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=(\n            \"Nhận ảnh từ FE, gửi trực tiếp tới YOLO API, \"\n            \"sau đó gửi kết quả YOLO cùng câu hỏi tới FastAPI RAG.\"",
+        "peekOfCode": "class ImageChatView(APIView):\n    permission_classes = [IsAuthenticated]\n    parser_classes = [\n        MultiPartParser,\n        FormParser\n    ]\n    @extend_schema(\n        request=ImageChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=(",
         "detail": "history.views",
         "documentation": {}
     },

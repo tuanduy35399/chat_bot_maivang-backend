@@ -119,7 +119,8 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Backend App Cay Mai', 
     'DESCRIPTION': 'API cho app quét bệnh lá mai', 
-    'VERSION': '1.0.0'
+    'VERSION': '1.0.0',
+    "COMPONENT_SPLIT_REQUEST": True,
 } 
 ROOT_URLCONF = 'backend.urls'
 
