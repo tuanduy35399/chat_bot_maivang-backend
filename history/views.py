@@ -153,7 +153,6 @@ class ImageChatView(APIView):
         FormParser
     ]
 
-
     @extend_schema(
         request=ImageChatRequestSerializer,
         responses={status.HTTP_200_OK: dict},
@@ -163,7 +162,6 @@ class ImageChatView(APIView):
         ),
     )
     def post(self, request, pk):
-
 
         serializer = ImageChatRequestSerializer(
             data=request.data
@@ -187,8 +185,11 @@ class ImageChatView(APIView):
                 "cây mai trong ảnh."
             )
 
-        try:
+        # =========================
+        # LẤY HISTORY
+        # =========================
 
+        try:
             history = HistoryChat.objects.get(
                 id=pk,
                 user=request.user
@@ -203,11 +204,20 @@ class ImageChatView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # =========================
+        # LƯU MESSAGE USER
+        # =========================
+
         ChatMessage.objects.create(
             history=history,
             role="user",
             content=question
         )
+
+        # =========================
+        # LẤY 10 MESSAGE GẦN NHẤT
+        # =========================
+
         messages = list(
             history.messages
             .order_by("-created_at")[:10]
@@ -223,22 +233,40 @@ class ImageChatView(APIView):
             for message in messages
         ]
 
+        # =========================
+        # ĐỌC IMAGE
+        # =========================
+
+        print("========== IMAGE CHAT ==========")
+
+        print("1. Đã nhận image:", image.name)
+
+        image.seek(0)
         image_bytes = image.read()
 
-        yolo_result = None
+        print(
+            "2. Đã đọc image:",
+            len(image_bytes),
+            "bytes"
+        )
+
+        # =========================
+        # GỌI YOLO
+        # =========================
+
+        print("3. Chuẩn bị gọi YOLO")
+        print("YOLO URL:", settings.YOLO_API_URL)
 
         try:
 
             headers = {}
 
             if settings.YOLO_API_KEY:
-
                 headers["Authorization"] = (
                     f"Bearer {settings.YOLO_API_KEY}"
                 )
 
             yolo_response = requests.post(
-
                 settings.YOLO_API_URL,
 
                 headers=headers,
@@ -253,17 +281,27 @@ class ImageChatView(APIView):
                     "file": (
                         image.name,
                         image_bytes,
-                        image.content_type
+                        image.content_type,
                     )
                 },
 
                 timeout=settings.YOLO_API_TIMEOUT,
             )
 
+            print(
+                "4. YOLO status:",
+                yolo_response.status_code
+            )
+
+            print(
+                "5. YOLO response:",
+                yolo_response.text
+            )
+
             yolo_response.raise_for_status()
 
             yolo_result = yolo_response.json()
-            print("Ket qua detect cua yolo "+ yolo_result)
+
         except requests.exceptions.Timeout:
 
             return Response(
@@ -281,7 +319,8 @@ class ImageChatView(APIView):
             return Response(
                 {
                     "detail": (
-                        "Không thể kết nối tới YOLO service."
+                        "Không thể kết nối tới "
+                        "YOLO service."
                     ),
                     "error": str(exc),
                 },
@@ -300,21 +339,59 @@ class ImageChatView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
+        # =========================
+        # EXTRACT DETECTIONS
+        # =========================
+
+        detections = [
+            {
+                "name": result["name"],
+                "confidence": result["confidence"],
+            }
+            for image_data in yolo_result.get("images", [])
+            for result in image_data.get("results", [])
+        ]
+
+        print(
+            "6. Detections:",
+            detections
+        )
+
+        # =========================
+        # GỌI FASTAPI RAG
+        # =========================
+
         try:
 
             fastapi_response = requests.post(
 
-                settings.FASTAPI_CHAT_URL,
+                settings.FASTAPI_IMAGE_CHAT_URL,
 
-                json={
+                data={
                     "question": question,
 
-                    "history": chat_history,
+                    "history": json.dumps(
+                        chat_history,
+                        ensure_ascii=False
+                    ),
 
-                    "yolo_result": yolo_result,
+                    "detections": json.dumps(
+                        detections,
+                        ensure_ascii=False
+                    ),
                 },
-                
+
                 timeout=settings.FASTAPI_TIMEOUT,
+            )
+
+            print(
+                "7. FastAPI status:",
+                fastapi_response.status_code
+            )
+
+            print(
+                "8. FastAPI response:",
+                fastapi_response.text
             )
 
             fastapi_response.raise_for_status()
@@ -338,7 +415,8 @@ class ImageChatView(APIView):
             return Response(
                 {
                     "detail": (
-                        "Không thể kết nối tới AI service."
+                        "Không thể kết nối tới "
+                        "AI service."
                     ),
                     "error": str(exc),
                 },
@@ -356,6 +434,11 @@ class ImageChatView(APIView):
                 },
                 status=status.HTTP_502_BAD_GATEWAY
             )
+
+        # =========================
+        # LẤY ANSWER
+        # =========================
+
         answer = (
             data.get("answer")
             if isinstance(data, dict)
@@ -374,6 +457,10 @@ class ImageChatView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
+        # =========================
+        # LƯU ANSWER
+        # =========================
+
         ChatMessage.objects.create(
             history=history,
             role="assistant",
@@ -384,23 +471,19 @@ class ImageChatView(APIView):
             update_fields=["updated_at"]
         )
 
+        # =========================
+        # RESPONSE
+        # =========================
+
         return Response(
             {
                 "question": question,
-
                 "answer": answer,
-
                 "history_id": history.id,
-
-                "detections": (
-                    yolo_result.get("detections", [])
-                    if isinstance(yolo_result, dict)
-                    else []
-                ),
+                "detections": detections,
             },
             status=status.HTTP_200_OK
         )
-
 
 class HistoryListCreateView(generics.ListCreateAPIView):
 
