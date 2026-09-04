@@ -224,7 +224,7 @@ class ImageChatView(APIView):
         ]
 
         image_bytes = image.read()
-        print("đã lấy được image_bytes: "+image_bytes)
+
         yolo_result = None
 
         try:
