@@ -22,6 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 load_dotenv()
+
+YOLO_API_URL = os.getenv("YOLO_API_URL")
+YOLO_API_KEY = os.getenv("YOLO_API_KEY")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!

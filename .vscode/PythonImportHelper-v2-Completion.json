@@ -25,22 +25,6 @@
         "documentation": {}
     },
     {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
         "label": "load_dotenv",
         "importPath": "dotenv",
         "description": "dotenv",
@@ -158,218 +142,6 @@
         "description": "django.core.wsgi",
         "isExtraImport": true,
         "detail": "django.core.wsgi",
-        "documentation": {}
-    },
-    {
-        "label": "Chroma",
-        "importPath": "langchain_community.vectorstores",
-        "description": "langchain_community.vectorstores",
-        "isExtraImport": true,
-        "detail": "langchain_community.vectorstores",
-        "documentation": {}
-    },
-    {
-        "label": "Chroma",
-        "importPath": "langchain_community.vectorstores",
-        "description": "langchain_community.vectorstores",
-        "isExtraImport": true,
-        "detail": "langchain_community.vectorstores",
-        "documentation": {}
-    },
-    {
-        "label": "GoogleGenerativeAIEmbeddings",
-        "importPath": "langchain_google_genai",
-        "description": "langchain_google_genai",
-        "isExtraImport": true,
-        "detail": "langchain_google_genai",
-        "documentation": {}
-    },
-    {
-        "label": "ChatGoogleGenerativeAI",
-        "importPath": "langchain_google_genai",
-        "description": "langchain_google_genai",
-        "isExtraImport": true,
-        "detail": "langchain_google_genai",
-        "documentation": {}
-    },
-    {
-        "label": "GoogleGenerativeAIEmbeddings",
-        "importPath": "langchain_google_genai",
-        "description": "langchain_google_genai",
-        "isExtraImport": true,
-        "detail": "langchain_google_genai",
-        "documentation": {}
-    },
-    {
-        "label": "PyPDFLoader",
-        "importPath": "langchain_community.document_loaders",
-        "description": "langchain_community.document_loaders",
-        "isExtraImport": true,
-        "detail": "langchain_community.document_loaders",
-        "documentation": {}
-    },
-    {
-        "label": "RecursiveCharacterTextSplitter",
-        "importPath": "langchain_text_splitters",
-        "description": "langchain_text_splitters",
-        "isExtraImport": true,
-        "detail": "langchain_text_splitters",
-        "documentation": {}
-    },
-    {
-        "label": "MarkdownHeaderTextSplitter",
-        "importPath": "langchain_text_splitters",
-        "description": "langchain_text_splitters",
-        "isExtraImport": true,
-        "detail": "langchain_text_splitters",
-        "documentation": {}
-    },
-    {
-        "label": "RecursiveCharacterTextSplitter",
-        "importPath": "langchain_text_splitters",
-        "description": "langchain_text_splitters",
-        "isExtraImport": true,
-        "detail": "langchain_text_splitters",
-        "documentation": {}
-    },
-    {
-        "label": "MarkdownHeaderTextSplitter",
-        "importPath": "langchain_text_splitters",
-        "description": "langchain_text_splitters",
-        "isExtraImport": true,
-        "detail": "langchain_text_splitters",
-        "documentation": {}
-    },
-    {
-        "label": "Se",
-        "importPath": "langchain_text_splitters",
-        "description": "langchain_text_splitters",
-        "isExtraImport": true,
-        "detail": "langchain_text_splitters",
-        "documentation": {}
-    },
-    {
-        "label": "json",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "json",
-        "description": "json",
-        "detail": "json",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "File",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "FastAPI",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "Form",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "HTTPException",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "UploadFile",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "io",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "io",
-        "description": "io",
-        "detail": "io",
-        "documentation": {}
-    },
-    {
-        "label": "BeautifulSoup",
-        "importPath": "bs4",
-        "description": "bs4",
-        "isExtraImport": true,
-        "detail": "bs4",
-        "documentation": {}
-    },
-    {
-        "label": "re",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "re",
-        "description": "re",
-        "detail": "re",
-        "documentation": {}
-    },
-    {
-        "label": "SentenceTransformer",
-        "importPath": "sentence_transformers",
-        "description": "sentence_transformers",
-        "isExtraImport": true,
-        "detail": "sentence_transformers",
-        "documentation": {}
-    },
-    {
-        "label": "chromadb",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "chromadb",
-        "description": "chromadb",
-        "detail": "chromadb",
         "documentation": {}
     },
     {
@@ -646,6 +418,15 @@
         "documentation": {}
     },
     {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
         "label": "IsAuthenticated",
         "importPath": "rest_framework.permissions",
         "description": "rest_framework.permissions",
@@ -787,6 +568,14 @@
         "documentation": {}
     },
     {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "application",
         "kind": 5,
         "importPath": "backend.asgi",
@@ -800,7 +589,25 @@
         "kind": 5,
         "importPath": "backend.settings",
         "description": "backend.settings",
-        "peekOfCode": "BASE_DIR = Path(__file__).resolve().parent.parent\n# Quick-start development settings - unsuitable for production\n# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/\n# SECURITY WARNING: keep the secret key used in production secret!\nload_dotenv()\nSECRET_KEY = os.getenv(\"DJANGO_SECRET_KEY\")\n# SECURITY WARNING: don't run with debug turned on in production!\nDEBUG = os.getenv(\"DEBUG\", \"False\").lower() == \"true\"\nALLOWED_HOSTS = [\n    host.strip()",
+        "peekOfCode": "BASE_DIR = Path(__file__).resolve().parent.parent\n# Quick-start development settings - unsuitable for production\n# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/\n# SECURITY WARNING: keep the secret key used in production secret!\nload_dotenv()\nYOLO_API_URL = os.getenv(\"YOLO_API_URL\")\nYOLO_API_KEY = os.getenv(\"YOLO_API_KEY\")\nSECRET_KEY = os.getenv(\"DJANGO_SECRET_KEY\")\n# SECURITY WARNING: don't run with debug turned on in production!\nDEBUG = os.getenv(\"DEBUG\", \"False\").lower() == \"true\"",
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "YOLO_API_URL",
+        "kind": 5,
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "peekOfCode": "YOLO_API_URL = os.getenv(\"YOLO_API_URL\")\nYOLO_API_KEY = os.getenv(\"YOLO_API_KEY\")\nSECRET_KEY = os.getenv(\"DJANGO_SECRET_KEY\")\n# SECURITY WARNING: don't run with debug turned on in production!\nDEBUG = os.getenv(\"DEBUG\", \"False\").lower() == \"true\"\nALLOWED_HOSTS = [\n    host.strip()\n    for host in os.getenv(\"ALLOWED_HOSTS\", \"localhost,127.0.0.1\").split(\",\")\n    if host.strip()\n]",
+        "detail": "backend.settings",
+        "documentation": {}
+    },
+    {
+        "label": "YOLO_API_KEY",
+        "kind": 5,
+        "importPath": "backend.settings",
+        "description": "backend.settings",
+        "peekOfCode": "YOLO_API_KEY = os.getenv(\"YOLO_API_KEY\")\nSECRET_KEY = os.getenv(\"DJANGO_SECRET_KEY\")\n# SECURITY WARNING: don't run with debug turned on in production!\nDEBUG = os.getenv(\"DEBUG\", \"False\").lower() == \"true\"\nALLOWED_HOSTS = [\n    host.strip()\n    for host in os.getenv(\"ALLOWED_HOSTS\", \"localhost,127.0.0.1\").split(\",\")\n    if host.strip()\n]\n# Application definition",
         "detail": "backend.settings",
         "documentation": {}
     },
@@ -1012,303 +819,6 @@
         "documentation": {}
     },
     {
-        "label": "documents",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "documents = load_pdf.load()\nheaders = {\n    (\"#\", \"h1\"),\n    (\"##\", \"h2\"),\n}\nphanchiaMarkDown = MarkdownHeaderTextSplitter(headers_to_split_on=headers, strip_headers= False)\nchunks = phanchiaMarkDown.split_documents(documents)\n#Nhung Googel AI \nembedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf ",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "headers",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "headers = {\n    (\"#\", \"h1\"),\n    (\"##\", \"h2\"),\n}\nphanchiaMarkDown = MarkdownHeaderTextSplitter(headers_to_split_on=headers, strip_headers= False)\nchunks = phanchiaMarkDown.split_documents(documents)\n#Nhung Googel AI \nembedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf \n    #chi tiet model o day https://ai.google.dev/gemini-api/docs/models/gemini-embedding-2?hl=vi",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "phanchiaMarkDown",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "phanchiaMarkDown = MarkdownHeaderTextSplitter(headers_to_split_on=headers, strip_headers= False)\nchunks = phanchiaMarkDown.split_documents(documents)\n#Nhung Googel AI \nembedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf \n    #chi tiet model o day https://ai.google.dev/gemini-api/docs/models/gemini-embedding-2?hl=vi\n)\n#tao vectorDB\ndb = Chroma.from_documents(\n    documents=chunks,",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "chunks",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "chunks = phanchiaMarkDown.split_documents(documents)\n#Nhung Googel AI \nembedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf \n    #chi tiet model o day https://ai.google.dev/gemini-api/docs/models/gemini-embedding-2?hl=vi\n)\n#tao vectorDB\ndb = Chroma.from_documents(\n    documents=chunks,\n    embedding=embedding,",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "embedding",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "embedding = GoogleGenerativeAIEmbeddings(\n    model=\"models/gemini-embedding-2\" #model embedding chuyen doc pdf \n    #chi tiet model o day https://ai.google.dev/gemini-api/docs/models/gemini-embedding-2?hl=vi\n)\n#tao vectorDB\ndb = Chroma.from_documents(\n    documents=chunks,\n    embedding=embedding,\n    persist_directory=\"vector_db\"\n)",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "chat.google_model.ingest",
-        "description": "chat.google_model.ingest",
-        "peekOfCode": "db = Chroma.from_documents(\n    documents=chunks,\n    embedding=embedding,\n    persist_directory=\"vector_db\"\n)\ndb.persist()\nprint(\"Đa tao thanh cong vector database\",len(chunks))",
-        "detail": "chat.google_model.ingest",
-        "documentation": {}
-    },
-    {
-        "label": "HistoryMessage",
-        "kind": 6,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "class HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "ChatRequest",
-        "kind": 6,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "class ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)\nclass ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(\n    image: UploadFile = File(...),\n    question: str = Form(\"\"),\n    history: str = Form(\"[]\"),",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "ChatResponse",
-        "kind": 6,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "class ChatResponse(BaseModel):\n    answer: str\n@app.post(\"/chat/image\")\nasync def image_chat(\n    image: UploadFile = File(...),\n    question: str = Form(\"\"),\n    history: str = Form(\"[]\"),\n):\n    image_bytes = await image.read()\n    try:",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "root",
-        "kind": 2,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "def root():\n    return {\n        \"message\": \"Mai Vang Chat Service is running\"\n    }\n@app.post(\n    \"/chat\",\n    response_model=ChatResponse\n)\ndef chat(request: ChatRequest):\n    history = [",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "chat",
-        "kind": 2,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "def chat(request: ChatRequest):\n    history = [\n        {\n            \"role\": message.role,\n            \"content\": message.content\n        }\n        for message in request.history\n    ]\n    answer = ask(\n        question=request.question,",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "app",
-        "kind": 5,
-        "importPath": "chat.google_model.main",
-        "description": "chat.google_model.main",
-        "peekOfCode": "app = FastAPI(\n    title=\"Mai Vang Chat Service\",\n    version=\"1.0.0\"\n)\nclass HistoryMessage(BaseModel):\n    role: str\n    content: str\nclass ChatRequest(BaseModel):\n    question: str\n    history: List[HistoryMessage] = Field(default_factory=list)",
-        "detail": "chat.google_model.main",
-        "documentation": {}
-    },
-    {
-        "label": "ask",
-        "kind": 2,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "def ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content\n        for doc in docs\n    )\n    history_text = \"\"\n    for message in history:",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "embedding",
-        "kind": 5,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "embedding = GoogleGenerativeAIEmbeddings(\n    model = \"models/gemini-embedding-2\"\n)\nPROJECT_ROOT = Path(__file__).resolve().parents[2]\ndb = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "PROJECT_ROOT",
-        "kind": 5,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "PROJECT_ROOT = Path(__file__).resolve().parents[2]\ndb = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "db = Chroma(\n    persist_directory=str(PROJECT_ROOT / \"vector_db\"),\n    embedding_function=embedding,\n)\nretriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "retriever",
-        "kind": 5,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "retriever = db.as_retriever(\n    search_kwargs={\"k\":3}\n)\nllm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "llm",
-        "kind": 5,
-        "importPath": "chat.google_model.rag",
-        "description": "chat.google_model.rag",
-        "peekOfCode": "llm = ChatGoogleGenerativeAI(\n    model=\"gemini-2.5-flash-lite\",\n    temperature=0\n)\ndef ask(question, history=None, system_prompt=None):\n    if history is None:\n        history = []\n    docs = retriever.invoke(question)\n    context = \"\\n\\n\".join(\n        doc.page_content",
-        "detail": "chat.google_model.rag",
-        "documentation": {}
-    },
-    {
-        "label": "YoloOnnxPlugin",
-        "kind": 6,
-        "importPath": "chat.google_model.yolo_plugin",
-        "description": "chat.google_model.yolo_plugin",
-        "peekOfCode": "class YoloOnnxPlugin:\n    def __init__(self, model_path: str | None = None):\n        self.model_path = model_path or os.getenv(\"YOLO_MODEL_PATH\", \"\")\n        self._session = None\n    def _load(self):\n        if not self.model_path:\n            raise RuntimeError(\"YOLO_MODEL_PATH chưa được cấu hình.\")\n        if not os.path.isfile(self.model_path):\n            raise RuntimeError(f\"Không tìm thấy YOLO ONNX model: {self.model_path}\")\n        if self._session is None:",
-        "detail": "chat.google_model.yolo_plugin",
-        "documentation": {}
-    },
-    {
-        "label": "detect",
-        "kind": 2,
-        "importPath": "chat.google_model.yolo_plugin",
-        "description": "chat.google_model.yolo_plugin",
-        "peekOfCode": "def detect(image_bytes: bytes) -> list[dict[str, Any]]:\n    return _detector.predict(image_bytes)\ndef format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections\n    )",
-        "detail": "chat.google_model.yolo_plugin",
-        "documentation": {}
-    },
-    {
-        "label": "format_detections",
-        "kind": 2,
-        "importPath": "chat.google_model.yolo_plugin",
-        "description": "chat.google_model.yolo_plugin",
-        "peekOfCode": "def format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections\n    )",
-        "detail": "chat.google_model.yolo_plugin",
-        "documentation": {}
-    },
-    {
-        "label": "_detector",
-        "kind": 5,
-        "importPath": "chat.google_model.yolo_plugin",
-        "description": "chat.google_model.yolo_plugin",
-        "peekOfCode": "_detector = YoloOnnxPlugin()\ndef detect(image_bytes: bytes) -> list[dict[str, Any]]:\n    return _detector.predict(image_bytes)\ndef format_detections(detections: list[dict[str, Any]]) -> str:\n    if not detections:\n        return \"YOLO không phát hiện dấu hiệu nào đáng chú ý.\"\n    return \"\\n\".join(\n        f\"- {item.get('class_name', item.get('class_id', 'unknown'))}: \"\n        f\"confidence={item.get('confidence', 0):.3f}\"\n        for item in detections",
-        "detail": "chat.google_model.yolo_plugin",
-        "documentation": {}
-    },
-    {
-        "label": "load_md",
-        "kind": 2,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "def load_md(path):\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return f.read()\nall_docs = []\nfor md in md_files:\n    text = load_md(md)\n    print(md) #test thôi\n    all_docs.append({\n        \"source\": md,\n        \"text\": text",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "extract_page",
-        "kind": 2,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "def extract_page(text):\n    match = re.search(r\"<page_number>(\\d+)</page_number>\", text)\n    if match:\n        return int(match.group(1))\n    return None\nfor doc in all_docs:\n    split_chunks = phanchiaNguNghia.split_text(doc[\"text\"]) \n    for index, chunk in enumerate(split_chunks):\n        chunks.append(chunk.page_content)\n        metadata.append({",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "md_folder",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "md_folder = r\"C:\\Users\\Duy\\Documents\\MyProject\\Learn-Django\\rag_project\\fastAPI\\app\\rag_indexing\\markdown\"\nmd_files = [\n    os.path.join(md_folder, f)\n    for f in os.listdir(md_folder)\n    if f.endswith(\".md\")\n]\ndef load_md(path):\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return f.read()\nall_docs = []",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "md_files",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "md_files = [\n    os.path.join(md_folder, f)\n    for f in os.listdir(md_folder)\n    if f.endswith(\".md\")\n]\ndef load_md(path):\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return f.read()\nall_docs = []\nfor md in md_files:",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "all_docs",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "all_docs = []\nfor md in md_files:\n    text = load_md(md)\n    print(md) #test thôi\n    all_docs.append({\n        \"source\": md,\n        \"text\": text\n    })\nchunks = []\nmetadata = [] #chuẩn bị metadata tốt là rất quan trọng ",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "chunks",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "chunks = []\nmetadata = [] #chuẩn bị metadata tốt là rất quan trọng \n#do cấu trúc page đã bị nhúng vô text rồi nên là dùng cách regex để lấy lại page\ndef extract_page(text):\n    match = re.search(r\"<page_number>(\\d+)</page_number>\", text)\n    if match:\n        return int(match.group(1))\n    return None\nfor doc in all_docs:\n    split_chunks = phanchiaNguNghia.split_text(doc[\"text\"]) ",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "metadata",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "metadata = [] #chuẩn bị metadata tốt là rất quan trọng \n#do cấu trúc page đã bị nhúng vô text rồi nên là dùng cách regex để lấy lại page\ndef extract_page(text):\n    match = re.search(r\"<page_number>(\\d+)</page_number>\", text)\n    if match:\n        return int(match.group(1))\n    return None\nfor doc in all_docs:\n    split_chunks = phanchiaNguNghia.split_text(doc[\"text\"]) \n    for index, chunk in enumerate(split_chunks):",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "model",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "model = SentenceTransformer(\"BAAI/bge-m3\")\nembeddings = model.encode(\n    chunks,\n    batch_size=32,\n    show_progress_bar=True\n)\nclient = chromadb.PersistentClient(path=\"chroma_db_split_markdownheader\")\ncollection = client.get_or_create_collection(\"cay_mai_md\")\n#lập chỉ mục\nfor i, chunk in enumerate(chunks):",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "embeddings",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "embeddings = model.encode(\n    chunks,\n    batch_size=32,\n    show_progress_bar=True\n)\nclient = chromadb.PersistentClient(path=\"chroma_db_split_markdownheader\")\ncollection = client.get_or_create_collection(\"cay_mai_md\")\n#lập chỉ mục\nfor i, chunk in enumerate(chunks):\n    collection.add(",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "client",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "client = chromadb.PersistentClient(path=\"chroma_db_split_markdownheader\")\ncollection = client.get_or_create_collection(\"cay_mai_md\")\n#lập chỉ mục\nfor i, chunk in enumerate(chunks):\n    collection.add(\n        documents=[chunk],\n        embeddings=[embeddings[i].tolist()],\n        ids=[f\"md_chunk_{i}\"],\n        metadatas=[metadata[i]]\n    )",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
-        "label": "collection",
-        "kind": 5,
-        "importPath": "chat.rag_indexing.chunking",
-        "description": "chat.rag_indexing.chunking",
-        "peekOfCode": "collection = client.get_or_create_collection(\"cay_mai_md\")\n#lập chỉ mục\nfor i, chunk in enumerate(chunks):\n    collection.add(\n        documents=[chunk],\n        embeddings=[embeddings[i].tolist()],\n        ids=[f\"md_chunk_{i}\"],\n        metadatas=[metadata[i]]\n    )",
-        "detail": "chat.rag_indexing.chunking",
-        "documentation": {}
-    },
-    {
         "label": "Migration",
         "kind": 6,
         "importPath": "diseases.migrations.0001_initial",
@@ -1511,7 +1021,7 @@
         "kind": 6,
         "importPath": "history.views",
         "description": "history.views",
-        "peekOfCode": "class ImageChatView(APIView):\n    permission_classes = [IsAuthenticated]\n    @extend_schema(\n        request=ImageChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=\"Gửi ảnh (và tùy chọn câu hỏi) qua YOLO rồi RAG.\",\n    )\n    def post(self, request, pk):\n        serializer = ImageChatRequestSerializer(data=request.data)\n        serializer.is_valid(raise_exception=True)",
+        "peekOfCode": "class ImageChatView(APIView):\n    permission_classes = [\n        IsAuthenticated\n    ]\n    @extend_schema(\n        request=ImageChatRequestSerializer,\n        responses={status.HTTP_200_OK: dict},\n        description=(\n            \"Nhận ảnh từ FE, gửi trực tiếp tới YOLO API, \"\n            \"sau đó gửi kết quả YOLO cùng câu hỏi tới FastAPI RAG.\"",
         "detail": "history.views",
         "documentation": {}
     },
@@ -1621,6 +1131,24 @@
         "description": "manage",
         "peekOfCode": "def main():\n    \"\"\"Run administrative tasks.\"\"\"\n    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')\n    try:\n        from django.core.management import execute_from_command_line\n    except ImportError as exc:\n        raise ImportError(\n            \"Couldn't import Django. Are you sure it's installed and \"\n            \"available on your PYTHONPATH environment variable? Did you \"\n            \"forget to activate a virtual environment?\"",
         "detail": "manage",
+        "documentation": {}
+    },
+    {
+        "label": "YoloService",
+        "kind": 6,
+        "importPath": "yolo_plugin",
+        "description": "yolo_plugin",
+        "peekOfCode": "class YoloService:\n    def predict(\n        self,\n        image_bytes: bytes,\n        filename: str = \"image.jpg\",\n        content_type: str = \"image/jpeg\",\n    ) -> dict[str, Any]:\n        if not self.api_url:\n            raise RuntimeError(\"YOLO_API_URL chưa được cấu hình.\")\n        headers = {}",
+        "detail": "yolo_plugin",
+        "documentation": {}
+    },
+    {
+        "label": "yolo_service",
+        "kind": 5,
+        "importPath": "yolo_plugin",
+        "description": "yolo_plugin",
+        "peekOfCode": "yolo_service = YoloService()",
+        "detail": "yolo_plugin",
         "documentation": {}
     }
 ]
