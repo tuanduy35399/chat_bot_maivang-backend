@@ -1,5 +1,5 @@
 import json
-
+from collections import defaultdict
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -343,13 +343,25 @@ class ImageChatView(APIView):
         # EXTRACT DETECTIONS
         # =========================
 
+        grouped_detections = defaultdict(list)
+
+        for image_data in yolo_result.get("images", []):
+
+            for result in image_data.get("results", []):
+
+                grouped_detections[
+                    result["name"]
+                ].append(
+                    result["confidence"]
+                )
+
+
         detections = [
             {
-                "name": result["name"],
-                "confidence": result["confidence"],
+                "name": name,
+                "confidence": max(confidences),
             }
-            for image_data in yolo_result.get("images", [])
-            for result in image_data.get("results", [])
+            for name, confidences in grouped_detections.items()
         ]
 
         print(
