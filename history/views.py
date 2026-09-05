@@ -328,7 +328,6 @@ class ImageChatView(APIView):
             )
 
         except ValueError:
-
             return Response(
                 {
                     "detail": (
@@ -337,6 +336,7 @@ class ImageChatView(APIView):
                     )
                 },
                 status=status.HTTP_502_BAD_GATEWAY
+                
             )
 
         # =========================
