@@ -1,15 +1,23 @@
+import os
+import runpy
 from unittest.mock import patch
 
+from backend import settings as backend_settings
 from django.contrib.auth import get_user_model
-from django.conf import settings
 from django.urls import reverse
+from django.test import SimpleTestCase
 from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
 
 
-def test_settings_accepts_missing_yolo_timeout():
-    assert settings.YOLO_API_TIMEOUT > 0
+class SettingsDefaultsTests(SimpleTestCase):
+    @patch.dict(os.environ, {}, clear=True)
+    @patch("dotenv.load_dotenv")
+    def test_settings_defaults_yolo_timeout_when_environment_is_missing(self, _load_dotenv):
+        values = runpy.run_path(backend_settings.__file__)
+
+        self.assertEqual(values["YOLO_API_TIMEOUT"], 30.0)
 
 
 class ChatViewTests(APITestCase):
