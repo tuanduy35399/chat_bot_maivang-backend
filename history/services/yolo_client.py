@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import requests
@@ -37,7 +38,7 @@ class YoloClient:
             return ServiceFailure("yolo_unavailable", "Không thể kết nối tới YOLO service.", 503, request_id)
         try:
             return YoloSuccess(self._parse_detections(response.json()), request_id)
-        except (TypeError, ValueError, KeyError):
+        except (TypeError, ValueError, KeyError, OverflowError):
             return ServiceFailure("yolo_invalid_response", "YOLO service trả về dữ liệu không hợp lệ.", 502, request_id)
 
     @staticmethod
@@ -60,9 +61,15 @@ class YoloClient:
                 class_id = result.get("class_id", result.get("class"))
                 if not isinstance(name, str):
                     raise ValueError("invalid YOLO name")
+                confidence = float(result["confidence"])
+                coordinates = tuple(float(value) for value in bbox)
+                if not math.isfinite(confidence) or not all(
+                    math.isfinite(value) for value in coordinates
+                ):
+                    raise ValueError("non-finite YOLO numeric value")
                 detections.append(YoloDetection(
                     class_id=int(class_id), name=name,
-                    confidence=float(result["confidence"]),
-                    bbox_xyxy=tuple(float(value) for value in bbox),
+                    confidence=confidence,
+                    bbox_xyxy=coordinates,
                 ))
         return tuple(detections)

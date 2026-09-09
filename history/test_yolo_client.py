@@ -47,3 +47,25 @@ class YoloClientTests(SimpleTestCase):
         self.assertEqual(result.code, "yolo_invalid_response")
         self.assertEqual(result.request_id, "req-1")
         self.assertNotIn("secret", result.message)
+
+    @patch("history.services.yolo_client.requests.post")
+    def test_predict_maps_non_finite_numeric_detection_to_safe_error(self, mock_post):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "images": [{"results": [{
+                "class_id": 4,
+                "name": "rust",
+                "confidence": 1e309,
+                "bbox_xyxy": [1, 2, 3, 4],
+            }]}]
+        }
+        mock_post.return_value = response
+
+        result = YoloClient(url="http://yolo", timeout=3).predict(
+            image_bytes=b"x", filename="leaf.jpg", content_type="image/jpeg",
+            request_id="req-1",
+        )
+
+        self.assertIsInstance(result, ServiceFailure)
+        self.assertEqual(result.code, "yolo_invalid_response")
