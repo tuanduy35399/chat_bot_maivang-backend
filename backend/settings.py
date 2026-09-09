@@ -26,6 +26,9 @@ load_dotenv()
 YOLO_API_URL = os.getenv("YOLO_API_URL")
 YOLO_API_KEY = os.getenv("YOLO_API_KEY")
 YOLO_API_TIMEOUT = float(os.getenv("YOLO_API_TIMEOUT", "30"))
+YOLO_CONFIDENCE_THRESHOLD = float(os.getenv("YOLO_CONFIDENCE_THRESHOLD", "0.25"))
+YOLO_IOU_THRESHOLD = float(os.getenv("YOLO_IOU_THRESHOLD", "0.7"))
+YOLO_IMAGE_SIZE = int(os.getenv("YOLO_IMAGE_SIZE", "640"))
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
