@@ -1,10 +1,15 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
+
+
+def test_settings_accepts_missing_yolo_timeout():
+    assert settings.YOLO_API_TIMEOUT > 0
 
 
 class ChatViewTests(APITestCase):
