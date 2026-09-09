@@ -1,4 +1,5 @@
 import os
+import re
 import runpy
 from io import BytesIO
 from unittest.mock import patch
@@ -104,6 +105,56 @@ class ChatViewTests(APITestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 1)
         self.assertEqual(ChatMessage.objects.get(history=self.history).role, "user")
+
+    @patch("history.views.RagClient.ask_text")
+    def test_subsequent_rag_history_omits_persisted_blank_image_user_message(self, mock_ask):
+        blank_image_message = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="",
+        )
+        ChatMessage.objects.create(
+            history=self.history,
+            role="assistant",
+            content="Kết quả nhận diện ảnh trước đó.",
+        )
+        mock_ask.return_value = RagSuccess(
+            answer="Bạn nên kiểm tra thêm độ ẩm đất.",
+            request_id="req-text-2",
+        )
+
+        response = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Cần chăm thế nào tiếp?"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            ChatMessage.objects.filter(pk=blank_image_message.pk, content="").exists()
+        )
+        self.assertEqual(
+            mock_ask.call_args.kwargs["history"],
+            [{"role": "assistant", "content": "Kết quả nhận diện ảnh trước đó."}],
+        )
+
+    @patch("history.views.RagClient.ask_text")
+    def test_chat_replaces_request_id_rejected_by_downstream_service(self, mock_ask):
+        mock_ask.return_value = RagSuccess(
+            answer="Bạn nên kiểm tra lá.", request_id="generated-request-id"
+        )
+
+        response = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Lá có bị bệnh không?"},
+            format="json",
+            HTTP_X_REQUEST_ID="trace:1",
+        )
+
+        request_id = mock_ask.call_args.kwargs["request_id"]
+        self.assertNotEqual(request_id, "trace:1")
+        self.assertRegex(request_id, re.compile(r"^[A-Za-z0-9._-]{1,128}$"))
+        self.assertEqual(response["X-Request-ID"], request_id)
 
     @patch("history.views.RagClient.ask_image")
     @patch("history.views.YoloClient.predict")

@@ -20,7 +20,7 @@ from .services.rag_client import RagClient
 from .services.yolo_client import YoloClient
 
 
-REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 
 
 def _request_id(request):
@@ -33,7 +33,11 @@ def _history_before_current_user_message(history, question):
     messages.reverse()
     if messages and messages[-1].role == "user" and messages[-1].content == question:
         messages.pop()
-    return [{"role": message.role, "content": message.content} for message in messages]
+    return [
+        {"role": message.role, "content": message.content}
+        for message in messages
+        if message.content.strip()
+    ]
 
 
 def _failure_response(failure):
