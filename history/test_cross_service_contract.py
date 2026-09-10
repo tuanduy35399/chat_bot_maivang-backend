@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from .models import HistoryChat
+from .models import ChatMessage, HistoryChat
 from .services.contracts import RagDetection, RagSuccess, YoloDetection, YoloSuccess
 
 
@@ -46,6 +46,43 @@ class CrossServiceContractTests(APITestCase):
         self.history = HistoryChat.objects.create(user=self.user, title="Contract matrix")
         self.client.force_authenticate(user=self.user)
 
+    @patch("history.views.RagClient.ask_text")
+    def test_text_only_contract_uses_text_route_and_keeps_legacy_four_field_shape(
+        self, mock_ask_text
+    ):
+        """Catches the text route omitting the legacy empty detections field."""
+        request_id = "trace:contract:text-only"
+        mock_ask_text.return_value = RagSuccess(
+            answer="Cần kiểm tra lá và xử lý sớm.", request_id=request_id
+        )
+
+        response = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Cách trị rỉ sắt?"},
+            format="json",
+            HTTP_X_REQUEST_ID=request_id,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["X-Request-ID"], request_id)
+        self.assertEqual(
+            set(response.data), {"question", "answer", "history_id", "detections"}
+        )
+        self.assertEqual(response.data["detections"], [])
+        self.assertNotIn("code", response.data)
+        self.assertEqual(mock_ask_text.call_args.kwargs, {
+            "question": "Cách trị rỉ sắt?",
+            "history": [],
+            "request_id": request_id,
+        })
+        self.assertEqual(
+            list(ChatMessage.objects.filter(history=self.history).values_list("role", "content")),
+            [
+                ("user", "Cách trị rỉ sắt?"),
+                ("assistant", "Cần kiểm tra lá và xử lý sớm."),
+            ],
+        )
+
     @patch("history.views.RagClient.ask_image")
     @patch("history.views.YoloClient.predict")
     def test_contract_matrix_keeps_legacy_public_shape_and_canonical_detections(
@@ -57,7 +94,7 @@ class CrossServiceContractTests(APITestCase):
         )
         raw_healthy = (YoloDetection(1, "healthy", 0.98, (9.0, 10.0, 11.0, 12.0)),)
 
-        for case in CASES:
+        for case in CASES[1:]:
             with self.subTest(case=case):
                 question = {
                     "text_only": "Cách trị rỉ sắt?",

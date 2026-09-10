@@ -87,7 +87,12 @@ class ChatView(APIView):
         ChatMessage.objects.create(history=history, role="assistant", content=result.answer)
         history.save(update_fields=["updated_at"])
         return Response(
-            {"question": question, "answer": result.answer, "history_id": history.id},
+            {
+                "question": question,
+                "answer": result.answer,
+                "history_id": history.id,
+                "detections": [],
+            },
             status=status.HTTP_200_OK,
             headers={"X-Request-ID": request_id},
         )
