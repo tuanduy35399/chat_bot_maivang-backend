@@ -15,12 +15,12 @@ from .serializers import (
     HistoryChatListSerializer,
     ImageChatRequestSerializer,
 )
-from .services.contracts import ServiceFailure, YoloDetection
+from .services.contracts import RagDetection, ServiceFailure, YoloDetection
 from .services.rag_client import RagClient
 from .services.yolo_client import YoloClient
 
 
-REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
+REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
 
 def _request_id(request):
@@ -48,10 +48,11 @@ def _failure_response(failure):
     )
 
 
-def _detection_payload(detections: tuple[YoloDetection, ...]):
+def _detection_payload(detections: tuple[RagDetection, ...]):
     return [{
         "class_id": detection.class_id,
         "name": detection.name,
+        "disease_name": detection.disease_name,
         "confidence": detection.confidence,
         "bbox_xyxy": list(detection.bbox_xyxy),
     } for detection in detections]
@@ -137,7 +138,7 @@ class ImageChatView(APIView):
                 "question": question,
                 "answer": rag_result.answer,
                 "history_id": history.id,
-                "detections": _detection_payload(yolo_result.detections),
+                "detections": _detection_payload(rag_result.detections),
             },
             status=status.HTTP_200_OK,
             headers={"X-Request-ID": request_id},

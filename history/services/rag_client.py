@@ -5,7 +5,7 @@ import json
 import requests
 from django.conf import settings
 
-from .contracts import RagSuccess, ServiceFailure, YoloDetection
+from .contracts import RagDetection, RagSuccess, ServiceFailure, YoloDetection
 
 
 class RagClient:
@@ -45,6 +45,35 @@ class RagClient:
             answer = body.get("answer") if isinstance(body, dict) else None
             if not isinstance(answer, str) or not answer.strip():
                 raise ValueError("missing answer")
+            detections = self._parse_detections(body.get("detections", []))
         except (TypeError, ValueError):
             return ServiceFailure("rag_invalid_response", "AI service trả về dữ liệu không hợp lệ.", 502, request_id)
-        return RagSuccess(answer, request_id)
+        return RagSuccess(answer, request_id, detections)
+
+    @staticmethod
+    def _parse_detections(payload) -> tuple[RagDetection, ...]:
+        if not isinstance(payload, list):
+            raise ValueError("invalid detections")
+        detections = []
+        for item in payload:
+            if not isinstance(item, dict):
+                raise ValueError("invalid detection")
+            bbox = item.get("bbox_xyxy")
+            if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+                raise ValueError("invalid detection bbox")
+            class_id = item.get("class_id")
+            name = item.get("name")
+            disease_name = item.get("disease_name")
+            confidence = item.get("confidence")
+            if isinstance(class_id, bool) or not isinstance(class_id, int):
+                raise ValueError("invalid detection class")
+            if not isinstance(name, str) or not isinstance(disease_name, str):
+                raise ValueError("invalid detection labels")
+            detections.append(RagDetection(
+                class_id=class_id,
+                name=name,
+                disease_name=disease_name,
+                confidence=float(confidence),
+                bbox_xyxy=tuple(float(value) for value in bbox),
+            ))
+        return tuple(detections)

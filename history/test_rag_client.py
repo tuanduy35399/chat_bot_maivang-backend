@@ -12,7 +12,16 @@ class RagClientTests(SimpleTestCase):
     def test_ask_image_serializes_raw_detections_and_forwards_request_id(self, mock_post):
         response = Mock()
         response.raise_for_status.return_value = None
-        response.json.return_value = {"answer": "Câu trả lời"}
+        response.json.return_value = {
+            "answer": "Câu trả lời",
+            "detections": [{
+                "class_id": 4,
+                "name": "dom-la",
+                "disease_name": "Đốm lá",
+                "confidence": 0.89,
+                "bbox_xyxy": [1, 2, 3, 4],
+            }],
+        }
         mock_post.return_value = response
         detection = YoloDetection(4, "dom-la", 0.89, (1.0, 2.0, 3.0, 4.0))
 
@@ -21,6 +30,9 @@ class RagClientTests(SimpleTestCase):
         )
 
         self.assertEqual(result.answer, "Câu trả lời")
+        self.assertEqual(result.detections[0].name, "dom-la")
+        self.assertEqual(result.detections[0].disease_name, "Đốm lá")
+        self.assertEqual(result.detections[0].bbox_xyxy, (1.0, 2.0, 3.0, 4.0))
         kwargs = mock_post.call_args.kwargs
         self.assertEqual(kwargs["headers"]["X-Request-ID"], "req-1")
         self.assertEqual(kwargs["data"]["question"], "")

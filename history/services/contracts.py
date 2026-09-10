@@ -16,9 +16,21 @@ class YoloSuccess:
 
 
 @dataclass(frozen=True)
+class RagDetection:
+    """Canonical detection projected by the FastAPI/package boundary."""
+
+    class_id: int
+    name: str
+    disease_name: str
+    confidence: float
+    bbox_xyxy: tuple[float, float, float, float]
+
+
+@dataclass(frozen=True)
 class RagSuccess:
     answer: str
     request_id: str
+    detections: tuple[RagDetection, ...] = ()
 
 
 @dataclass(frozen=True)

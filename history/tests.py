@@ -13,7 +13,7 @@ from django.test import SimpleTestCase
 from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
-from .services.contracts import RagSuccess, ServiceFailure, YoloDetection, YoloSuccess
+from .services.contracts import RagDetection, RagSuccess, ServiceFailure, YoloDetection, YoloSuccess
 
 
 def image_file():
@@ -152,8 +152,8 @@ class ChatViewTests(APITestCase):
         )
 
         request_id = mock_ask.call_args.kwargs["request_id"]
-        self.assertNotEqual(request_id, "trace:1")
-        self.assertRegex(request_id, re.compile(r"^[A-Za-z0-9._-]{1,128}$"))
+        self.assertEqual(request_id, "trace:1")
+        self.assertRegex(request_id, re.compile(r"^[A-Za-z0-9._:-]{1,128}$"))
         self.assertEqual(response["X-Request-ID"], request_id)
 
     @patch("history.views.RagClient.ask_image")
@@ -171,7 +171,15 @@ class ChatViewTests(APITestCase):
             detections=(detection,), request_id="req-image-1"
         )
         mock_ask_image.return_value = RagSuccess(
-            answer="Lá có dấu hiệu đốm lá.", request_id="req-image-1"
+            answer="Lá có dấu hiệu đốm lá.",
+            request_id="req-image-1",
+            detections=(RagDetection(
+                class_id=4,
+                name="dom-la",
+                disease_name="Đốm lá",
+                confidence=0.89,
+                bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+            ),),
         )
 
         response = self.client.post(
@@ -186,6 +194,7 @@ class ChatViewTests(APITestCase):
         self.assertEqual(response.data["detections"], [{
             "class_id": 4,
             "name": "dom-la",
+            "disease_name": "Đốm lá",
             "confidence": 0.89,
             "bbox_xyxy": [1.0, 2.0, 3.0, 4.0],
         }])
