@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 from django.test import SimpleTestCase
 
 from .services.contracts import ServiceFailure, YoloDetection
+from .services.id_token import audience_from_service_url, fetch_google_id_token
 from .services.rag_client import RagClient
 
 
@@ -54,3 +55,21 @@ class RagClientTests(SimpleTestCase):
         self.assertIsInstance(result, ServiceFailure)
         self.assertEqual(result.code, "rag_unavailable")
         self.assertNotIn("secret", result.message)
+
+
+class IdTokenHelperTests(SimpleTestCase):
+    def test_audience_from_service_url_strips_path(self):
+        self.assertEqual(
+            audience_from_service_url("https://maivang-rag-xyz.run.app/chat"),
+            "https://maivang-rag-xyz.run.app",
+        )
+        self.assertEqual(
+            audience_from_service_url("https://maivang-rag-xyz.run.app/chat/image"),
+            "https://maivang-rag-xyz.run.app",
+        )
+
+    @patch("history.services.id_token.id_token.fetch_id_token", return_value="tok-123")
+    def test_fetch_google_id_token_passes_audience(self, mock_fetch):
+        token = fetch_google_id_token("https://maivang-rag-xyz.run.app")
+        self.assertEqual(token, "tok-123")
+        self.assertEqual(mock_fetch.call_args.args[1], "https://maivang-rag-xyz.run.app")
