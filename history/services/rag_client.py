@@ -6,13 +6,35 @@ import requests
 from django.conf import settings
 
 from .contracts import RagDetection, RagSuccess, ServiceFailure, YoloDetection
+from .id_token import fetch_google_id_token
 
 
 class RagClient:
-    def __init__(self, *, text_url=None, image_url=None, timeout=None) -> None:
+    def __init__(
+        self,
+        *,
+        text_url=None,
+        image_url=None,
+        timeout=None,
+        id_token_audience=None,
+        id_token_fetcher=None,
+    ) -> None:
         self.text_url = settings.FASTAPI_CHAT_URL if text_url is None else text_url
         self.image_url = settings.FASTAPI_IMAGE_CHAT_URL if image_url is None else image_url
         self.timeout = settings.FASTAPI_TIMEOUT if timeout is None else timeout
+        self.id_token_audience = (
+            settings.RAG_ID_TOKEN_AUDIENCE if id_token_audience is None else id_token_audience
+        )
+        self._id_token_fetcher = (
+            fetch_google_id_token if id_token_fetcher is None else id_token_fetcher
+        )
+
+    def _headers(self, request_id: str) -> dict[str, str]:
+        headers = {"X-Request-ID": request_id}
+        audience = (self.id_token_audience or "").strip()
+        if audience:
+            headers["Authorization"] = f"Bearer {self._id_token_fetcher(audience)}"
+        return headers
 
     def ask_text(self, *, question, history, request_id):
         return self._post(self.text_url, {"question": question, "history": history}, request_id, json_payload=True)
@@ -32,7 +54,7 @@ class RagClient:
 
     def _post(self, url, payload, request_id, *, json_payload):
         try:
-            kwargs = {"headers": {"X-Request-ID": request_id}, "timeout": self.timeout}
+            kwargs = {"headers": self._headers(request_id), "timeout": self.timeout}
             kwargs["json" if json_payload else "data"] = payload
             response = requests.post(url, **kwargs)
             response.raise_for_status()

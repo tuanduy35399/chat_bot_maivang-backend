@@ -94,6 +94,7 @@ FASTAPI_IMAGE_CHAT_URL = os.getenv(
     FASTAPI_CHAT_URL.rstrip("/") + "/image"
 )
 FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "120"))
+RAG_ID_TOKEN_AUDIENCE = os.getenv("RAG_ID_TOKEN_AUDIENCE", "")
 
 REST_FRAMEWORK = {
     

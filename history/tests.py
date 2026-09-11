@@ -34,6 +34,12 @@ class SettingsDefaultsTests(SimpleTestCase):
 
         self.assertEqual(values["YOLO_API_TIMEOUT"], 30.0)
 
+    @patch.dict(os.environ, {}, clear=True)
+    @patch("dotenv.load_dotenv")
+    def test_settings_default_id_token_audience_is_empty(self, _load_dotenv):
+        values = runpy.run_path(backend_settings.__file__)
+        self.assertEqual(values["RAG_ID_TOKEN_AUDIENCE"], "")
+
 
 class ChatViewTests(APITestCase):
     def setUp(self):
