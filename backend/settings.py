@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,16 @@ ALLOWED_HOSTS = [
     for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if host.strip()
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+if os.getenv("DJANGO_TRUST_X_FORWARDED_PROTO", "").lower() == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
 
 
 # Application definition
@@ -151,6 +162,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+DJANGO_REQUIRE_DATABASE_URL = os.getenv("DJANGO_REQUIRE_DATABASE_URL", "").lower() == "true"
+
+if DJANGO_REQUIRE_DATABASE_URL and not DATABASE_URL:
+    raise ImproperlyConfigured("DATABASE_URL is required when DJANGO_REQUIRE_DATABASE_URL=true")
 
 if DATABASE_URL:
     import dj_database_url

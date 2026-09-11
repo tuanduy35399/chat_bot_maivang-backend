@@ -40,6 +40,44 @@ class SettingsDefaultsTests(SimpleTestCase):
         values = runpy.run_path(backend_settings.__file__)
         self.assertEqual(values["RAG_ID_TOKEN_AUDIENCE"], "")
 
+    @patch.dict(os.environ, {}, clear=True)
+    @patch("dotenv.load_dotenv")
+    def test_settings_default_does_not_require_database_url(self, _load_dotenv):
+        values = runpy.run_path(backend_settings.__file__)
+        self.assertFalse(values["DJANGO_REQUIRE_DATABASE_URL"])
+        self.assertEqual(values["DATABASES"]["default"]["ENGINE"], "django.db.backends.sqlite3")
+
+    @patch.dict(
+        os.environ,
+        {"DJANGO_REQUIRE_DATABASE_URL": "true"},
+        clear=True,
+    )
+    @patch("dotenv.load_dotenv")
+    def test_settings_require_database_url_without_value_raises(self, _load_dotenv):
+        with self.assertRaises(Exception) as raised:
+            runpy.run_path(backend_settings.__file__)
+        self.assertIn("DATABASE_URL", str(raised.exception))
+
+    @patch.dict(
+        os.environ,
+        {
+            "CSRF_TRUSTED_ORIGINS": "https://maivang-api-xyz.run.app",
+            "DJANGO_TRUST_X_FORWARDED_PROTO": "true",
+        },
+        clear=True,
+    )
+    @patch("dotenv.load_dotenv")
+    def test_settings_cloud_run_proxy_and_csrf(self, _load_dotenv):
+        values = runpy.run_path(backend_settings.__file__)
+        self.assertEqual(
+            values["CSRF_TRUSTED_ORIGINS"],
+            ["https://maivang-api-xyz.run.app"],
+        )
+        self.assertEqual(
+            values["SECURE_PROXY_SSL_HEADER"],
+            ("HTTP_X_FORWARDED_PROTO", "https"),
+        )
+
 
 class ChatViewTests(APITestCase):
     def setUp(self):
