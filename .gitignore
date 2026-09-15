@@ -7,3 +7,4 @@ db.sqlite3
 # Local YOLO model files (store/deploy separately)
 *.onnx
 models/
+docs/
