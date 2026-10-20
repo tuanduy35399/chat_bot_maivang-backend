@@ -117,18 +117,19 @@ class ChatViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["history_id"], self.history.id)
-        self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 2)
+        messages = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+        self.assertEqual(len(messages), 2)
+        user_msg, assistant_msg = messages
         self.assertEqual(
-            list(
-                ChatMessage.objects.filter(history=self.history).values_list(
-                    "role", "content"
-                )
-            ),
+            [(user_msg.role, user_msg.content), (assistant_msg.role, assistant_msg.content)],
             [
                 ("user", "Lá mai bị vàng thì phải làm sao?"),
                 ("assistant", "Bạn nên kiểm tra lá và điều kiện tưới nước."),
             ],
         )
+        self.assertEqual(user_msg.processing_status, "complete")
+        self.assertEqual(assistant_msg.processing_status, "complete")
+        self.assertEqual(assistant_msg.reply_to_id, user_msg.id)
         mock_ask.assert_called_once()
         payload = mock_ask.call_args.kwargs
         self.assertEqual(payload["question"], "Lá mai bị vàng thì phải làm sao?")
@@ -151,7 +152,9 @@ class ChatViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 1)
-        self.assertEqual(ChatMessage.objects.get(history=self.history).role, "user")
+        failed_msg = ChatMessage.objects.get(history=self.history)
+        self.assertEqual(failed_msg.role, "user")
+        self.assertEqual(failed_msg.processing_status, "failed")
 
     @patch("history.views.RagClient.ask_text")
     def test_subsequent_rag_history_omits_persisted_blank_image_user_message(self, mock_ask):
@@ -160,7 +163,7 @@ class ChatViewTests(APITestCase):
             role="user",
             content="",
         )
-        ChatMessage.objects.create(
+        legacy_assistant = ChatMessage.objects.create(
             history=self.history,
             role="assistant",
             content="Kết quả nhận diện ảnh trước đó.",
@@ -182,7 +185,13 @@ class ChatViewTests(APITestCase):
         )
         self.assertEqual(
             mock_ask.call_args.kwargs["history"],
-            [{"role": "assistant", "content": "Kết quả nhận diện ảnh trước đó."}],
+            [
+                {
+                    "message_id": legacy_assistant.id,
+                    "role": "assistant",
+                    "content": "Kết quả nhận diện ảnh trước đó.",
+                }
+            ],
         )
 
     @patch("history.views.RagClient.ask_text")
@@ -251,6 +260,23 @@ class ChatViewTests(APITestCase):
         self.assertEqual(rag_kwargs["history"], [])
         self.assertEqual(rag_kwargs["request_id"], "req-image-1")
         self.assertEqual(rag_kwargs["detections"], (detection,))
+        messages = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+        self.assertEqual(len(messages), 2)
+        user_msg, assistant_msg = messages
+        self.assertTrue(user_msg.has_image)
+        self.assertEqual(
+            user_msg.detections,
+            [{
+                "class_id": 4,
+                "name": "dom-la",
+                "disease_name": "Đốm lá",
+                "confidence": 0.89,
+                "bbox_xyxy": [1.0, 2.0, 3.0, 4.0],
+            }],
+        )
+        self.assertEqual(user_msg.processing_status, "complete")
+        self.assertEqual(assistant_msg.processing_status, "complete")
+        self.assertEqual(assistant_msg.reply_to_id, user_msg.id)
 
     @patch("history.views.YoloClient.predict")
     def test_image_view_returns_safe_yolo_failure_without_assistant_message(self, mock_predict):
@@ -272,6 +298,10 @@ class ChatViewTests(APITestCase):
         self.assertEqual(response.data["code"], "yolo_unavailable")
         self.assertEqual(response.data["request_id"], "req-image-1")
         self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 1)
+        failed_msg = ChatMessage.objects.get(history=self.history)
+        self.assertEqual(failed_msg.processing_status, "failed")
+        self.assertFalse(failed_msg.has_image)
+        self.assertEqual(failed_msg.detections, [])
 
     def test_chat_does_not_expose_another_users_history(self):
         other_history = HistoryChat.objects.create(user=self.other_user)
@@ -284,6 +314,427 @@ class ChatViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(ChatMessage.objects.filter(history=other_history).count(), 0)
+
+    @patch("history.views.RagClient.ask_text")
+    def test_identical_questions_do_not_drop_earlier_turn(self, mock_ask):
+        mock_ask.side_effect = [
+            RagSuccess(
+                answer="Câu trả lời lần 1.",
+                request_id="req-ident-1",
+            ),
+            RagSuccess(
+                answer="Câu trả lời lần 2.",
+                request_id="req-ident-2",
+            ),
+        ]
+        same_question = "Lá mai bị vàng thì phải làm sao?"
+
+        first_res = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": same_question},
+            format="json",
+        )
+        self.assertEqual(first_res.status_code, 200)
+        u1, a1 = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+
+        second_res = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": same_question},
+            format="json",
+        )
+        self.assertEqual(second_res.status_code, 200)
+
+        second_call_history = mock_ask.call_args_list[1].kwargs["history"]
+        self.assertEqual(
+            second_call_history,
+            [
+                {
+                    "message_id": u1.id,
+                    "role": "user",
+                    "content": same_question,
+                },
+                {
+                    "message_id": a1.id,
+                    "role": "assistant",
+                    "content": "Câu trả lời lần 1.",
+                },
+            ],
+        )
+
+    @patch("history.views.RagClient.ask_text")
+    def test_concurrent_turn_snapshot_excludes_pending_and_includes_completed_pair(self, mock_ask):
+        from .views import _history_before_current_user_message
+
+        # Request 1 starts (u1 pending)
+        u1 = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Câu hỏi 1 đang chạy",
+            processing_status="pending",
+        )
+        # Request 2 starts concurrently while Request 1 is still pending (u2 created after u1)
+        u2 = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Câu hỏi 2 chạy đồng thời",
+            processing_status="pending",
+        )
+
+        # Case A: If Request 2 snapshots history while Request 1 is still pending, u1 is excluded
+        self.assertEqual(_history_before_current_user_message(self.history, u2.id), [])
+
+        # Even if a lone user row somehow had processing_status="complete" without a reply, it must not leak as a lone user message
+        lone_user = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Tin nhắn mồ côi",
+            processing_status="complete",
+        )
+        u_after_lone = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Câu hỏi sau tin mồ côi",
+            processing_status="pending",
+        )
+        self.assertEqual(_history_before_current_user_message(self.history, u_after_lone.id), [])
+        lone_user.delete()
+        u_after_lone.delete()
+
+        # Case B: Request 1 finishes AFTER u2 was created -> a1 has created_at > u2.created_at
+        a1 = ChatMessage(
+            history=self.history,
+            role="assistant",
+            content="Trả lời cho câu hỏi 1 (lưu sau khi u2 đã tạo).",
+            processing_status="complete",
+            reply_to=u1,
+        )
+        a1.full_clean()
+        a1.save()
+        u1.processing_status = "complete"
+        u1.save(update_fields=["processing_status"])
+
+        # Now when Request 2 reads history for u2.id, it must find (u1, a1) via reply_to despite a1.created_at > u2.created_at
+        self.assertEqual(
+            _history_before_current_user_message(self.history, u2.id),
+            [
+                {
+                    "message_id": u1.id,
+                    "role": "user",
+                    "content": "Câu hỏi 1 đang chạy",
+                },
+                {
+                    "message_id": a1.id,
+                    "role": "assistant",
+                    "content": "Trả lời cho câu hỏi 1 (lưu sau khi u2 đã tạo).",
+                },
+            ],
+        )
+
+        # Case C: End-to-end interleaving during ChatView.post where an earlier pending request stays excluded
+        in_flight_u = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Lượt đang pending chưa xong",
+            processing_status="pending",
+        )
+        mock_ask.return_value = RagSuccess(
+            answer="Trả lời lượt mới.",
+            request_id="req-conc-3",
+        )
+        response = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Lượt mới gửi khi lượt trước vẫn pending"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        # Only (u1, a1) should be in history; u2 and in_flight_u are pending and must be excluded
+        self.assertEqual(
+            mock_ask.call_args.kwargs["history"],
+            [
+                {
+                    "message_id": u1.id,
+                    "role": "user",
+                    "content": "Câu hỏi 1 đang chạy",
+                },
+                {
+                    "message_id": a1.id,
+                    "role": "assistant",
+                    "content": "Trả lời cho câu hỏi 1 (lưu sau khi u2 đã tạo).",
+                },
+            ],
+        )
+        in_flight_u.refresh_from_db()
+        self.assertEqual(in_flight_u.processing_status, "pending")
+
+    @patch("history.views.RagClient.ask_text")
+    @patch("history.views.RagClient.ask_image")
+    @patch("history.views.YoloClient.predict")
+    def test_successful_blank_image_is_preserved(self, mock_predict, mock_ask_image, mock_ask_text):
+        detection = YoloDetection(
+            class_id=4,
+            name="dom-la",
+            confidence=0.89,
+            bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+        )
+        mock_predict.side_effect = [
+            YoloSuccess(detections=(detection,), request_id="req-img-det"),
+            YoloSuccess(detections=(), request_id="req-img-nodet"),
+        ]
+        mock_ask_image.side_effect = [
+            RagSuccess(
+                answer="Lá có dấu hiệu đốm lá.",
+                request_id="req-img-det",
+                detections=(
+                    RagDetection(
+                        class_id=4,
+                        name="dom-la",
+                        disease_name="Đốm lá",
+                        confidence=0.89,
+                        bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+                    ),
+                ),
+            ),
+            RagSuccess(
+                answer="Ảnh chưa phát hiện dấu hiệu bệnh rõ ràng.",
+                request_id="req-img-nodet",
+                detections=(),
+            ),
+        ]
+        mock_ask_text.return_value = RagSuccess(
+            answer="Bạn có thể phun thuốc đặc trị đốm lá.",
+            request_id="req-followup",
+        )
+
+        # 1. Blank image WITH detection
+        res1 = self.client.post(
+            reverse("history-image-chat", args=[self.history.id]),
+            {"image": image_file()},
+            format="multipart",
+        )
+        self.assertEqual(res1.status_code, 200)
+
+        # 2. Blank image WITHOUT detection (detections == [])
+        res2 = self.client.post(
+            reverse("history-image-chat", args=[self.history.id]),
+            {"image": image_file(), "question": ""},
+            format="multipart",
+        )
+        self.assertEqual(res2.status_code, 200)
+
+        msgs = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+        self.assertEqual(len(msgs), 4)
+        u_det, a_det, u_nodet, a_nodet = msgs
+
+        # 3. Follow-up text question checks that BOTH blank image turns are preserved in history
+        res3 = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Vậy bệnh ở ảnh đầu tiên xịt thuốc gì?"},
+            format="json",
+        )
+        self.assertEqual(res3.status_code, 200)
+        self.assertEqual(
+            mock_ask_text.call_args.kwargs["history"],
+            [
+                {
+                    "message_id": u_det.id,
+                    "role": "user",
+                    "content": "",
+                    "has_image": True,
+                    "detections": [
+                        {
+                            "class_id": 4,
+                            "name": "dom-la",
+                            "disease_name": "Đốm lá",
+                            "confidence": 0.89,
+                            "bbox_xyxy": [1.0, 2.0, 3.0, 4.0],
+                        }
+                    ],
+                },
+                {
+                    "message_id": a_det.id,
+                    "role": "assistant",
+                    "content": "Lá có dấu hiệu đốm lá.",
+                },
+                {
+                    "message_id": u_nodet.id,
+                    "role": "user",
+                    "content": "",
+                    "has_image": True,
+                    "detections": [],
+                },
+                {
+                    "message_id": a_nodet.id,
+                    "role": "assistant",
+                    "content": "Ảnh chưa phát hiện dấu hiệu bệnh rõ ràng.",
+                },
+            ],
+        )
+
+    @patch("history.views.RagClient.ask_text")
+    @patch("history.views.RagClient.ask_image")
+    @patch("history.views.YoloClient.predict")
+    def test_failed_image_turn_is_excluded(self, mock_predict, mock_ask_image, mock_ask_text):
+        detection = YoloDetection(
+            class_id=4,
+            name="dom-la",
+            confidence=0.89,
+            bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+        )
+        # 1. Image turn failing at YOLO with 503
+        # 2. Image turn succeeding at YOLO but failing at RAG with 504
+        mock_predict.side_effect = [
+            ServiceFailure("yolo_unavailable", "YOLO 503", 503, "req-fail-1"),
+            YoloSuccess(detections=(detection,), request_id="req-fail-2"),
+        ]
+        mock_ask_image.return_value = ServiceFailure(
+            "rag_timeout",
+            "AI service phản hồi quá thời gian cho phép.",
+            504,
+            "req-fail-2",
+        )
+        # 3. Text turn failing at RAG with 504, then 4. Text turn succeeding
+        mock_ask_text.side_effect = [
+            ServiceFailure("rag_timeout", "RAG 504", 504, "req-fail-3"),
+            RagSuccess(answer="Câu trả lời thành công.", request_id="req-ok-4"),
+        ]
+
+        res_yolo_503 = self.client.post(
+            reverse("history-image-chat", args=[self.history.id]),
+            {"image": image_file(), "question": "Ảnh lỗi YOLO 503"},
+            format="multipart",
+        )
+        self.assertEqual(res_yolo_503.status_code, 503)
+
+        res_rag_504 = self.client.post(
+            reverse("history-image-chat", args=[self.history.id]),
+            {"image": image_file(), "question": ""},
+            format="multipart",
+        )
+        self.assertEqual(res_rag_504.status_code, 504)
+
+        res_text_504 = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Câu hỏi lỗi RAG 504"},
+            format="json",
+        )
+        self.assertEqual(res_text_504.status_code, 504)
+
+        failed_msgs = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+        self.assertEqual(len(failed_msgs), 3)
+        for msg in failed_msgs:
+            self.assertEqual(msg.processing_status, "failed")
+            self.assertFalse(msg.has_image)
+            self.assertEqual(msg.detections, [])
+
+        res_ok = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Câu hỏi tiếp theo sau các lượt lỗi"},
+            format="json",
+        )
+        self.assertEqual(res_ok.status_code, 200)
+        self.assertEqual(mock_ask_text.call_args_list[1].kwargs["history"], [])
+
+    @patch("history.views.RagClient.ask_text")
+    def test_history_limit_is_ten_messages_not_ten_pairs(self, mock_ask):
+        created_pairs = []
+        for idx in range(1, 7):
+            u = ChatMessage.objects.create(
+                history=self.history,
+                role="user",
+                content=f"Câu hỏi {idx}",
+                processing_status="complete",
+            )
+            a = ChatMessage(
+                history=self.history,
+                role="assistant",
+                content=f"Trả lời {idx}",
+                processing_status="complete",
+                reply_to=u,
+            )
+            a.full_clean()
+            a.save()
+            created_pairs.append((u, a))
+
+        mock_ask.return_value = RagSuccess(answer="Trả lời 7", request_id="req-7")
+        response = self.client.post(
+            reverse("history-chat", args=[self.history.id]),
+            {"question": "Câu hỏi 7"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        forwarded_history = mock_ask.call_args.kwargs["history"]
+        self.assertEqual(len(forwarded_history), 10)
+        expected_messages = []
+        for u, a in created_pairs[1:]:
+            expected_messages.append({"message_id": u.id, "role": "user", "content": u.content})
+            expected_messages.append({"message_id": a.id, "role": "assistant", "content": a.content})
+        self.assertEqual(forwarded_history, expected_messages)
+
+    @patch("history.views.RagClient.ask_image")
+    @patch("history.views.YoloClient.predict")
+    def test_no_transaction_held_during_external_calls_and_serializer_exposes_metadata(
+        self, mock_predict, mock_ask_image
+    ):
+        baseline_atomic_depth = len(connection.atomic_blocks)
+        atomic_depths_during_full_clean = []
+        original_full_clean = ChatMessage.full_clean
+
+        def check_predict(**_kwargs):
+            self.assertEqual(len(connection.atomic_blocks), baseline_atomic_depth)
+            return YoloSuccess(
+                detections=(
+                    YoloDetection(
+                        class_id=4,
+                        name="dom-la",
+                        confidence=0.91,
+                        bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+                    ),
+                ),
+                request_id="req-atomic-check",
+            )
+
+        def check_ask_image(**_kwargs):
+            self.assertEqual(len(connection.atomic_blocks), baseline_atomic_depth)
+            return RagSuccess(
+                answer="Kết quả kiểm tra transaction.",
+                request_id="req-atomic-check",
+                detections=(
+                    RagDetection(
+                        class_id=4,
+                        name="dom-la",
+                        disease_name="Đốm lá",
+                        confidence=0.91,
+                        bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+                    ),
+                ),
+            )
+
+        def spy_full_clean(instance, *args, **kwargs):
+            atomic_depths_during_full_clean.append(len(connection.atomic_blocks))
+            return original_full_clean(instance, *args, **kwargs)
+
+        mock_predict.side_effect = check_predict
+        mock_ask_image.side_effect = check_ask_image
+
+        with patch.object(ChatMessage, "full_clean", autospec=True, side_effect=spy_full_clean):
+            res = self.client.post(
+                reverse("history-image-chat", args=[self.history.id]),
+                {"image": image_file(), "question": "Kiểm tra ảnh"},
+                format="multipart",
+            )
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(atomic_depths_during_full_clean, [baseline_atomic_depth + 1])
+
+        detail_res = self.client.get(reverse("history-detail", args=[self.history.id]))
+        self.assertEqual(detail_res.status_code, 200)
+        self.assertEqual(len(detail_res.data["messages"]), 2)
+        user_item, assistant_item = detail_res.data["messages"]
+        self.assertTrue(user_item["has_image"])
+        self.assertEqual(user_item["processing_status"], "complete")
+        self.assertEqual(len(user_item["detections"]), 1)
+        self.assertFalse(assistant_item["has_image"])
+        self.assertEqual(assistant_item["processing_status"], "complete")
+        self.assertEqual(assistant_item["detections"], [])
 
 
 class ChatMessageModelTests(TestCase):

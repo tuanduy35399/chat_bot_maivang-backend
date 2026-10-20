@@ -22,10 +22,16 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "id",
             "role",
             "content",
+            "has_image",
+            "detections",
+            "processing_status",
             "created_at",
         ]
         read_only_fields = [
             "id",
+            "has_image",
+            "detections",
+            "processing_status",
             "created_at",
         ]
 
@@ -47,6 +53,7 @@ class HistoryChatListSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
 
 class HistoryChatDetailSerializer(serializers.ModelSerializer):
 

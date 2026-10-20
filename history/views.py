@@ -1,6 +1,8 @@
 import re
 import uuid
 
+from django.db import transaction
+from django.db.models import Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -15,7 +17,7 @@ from .serializers import (
     HistoryChatListSerializer,
     ImageChatRequestSerializer,
 )
-from .services.contracts import RagDetection, ServiceFailure, YoloDetection
+from .services.contracts import RagDetection, ServiceFailure
 from .services.rag_client import RagClient
 from .services.yolo_client import YoloClient
 
@@ -28,16 +30,87 @@ def _request_id(request):
     return candidate if REQUEST_ID_PATTERN.fullmatch(candidate) else str(uuid.uuid4())
 
 
-def _history_before_current_user_message(history, question):
-    messages = list(history.messages.order_by("-created_at")[:10])
-    messages.reverse()
-    if messages and messages[-1].role == "user" and messages[-1].content == question:
-        messages.pop()
-    return [
-        {"role": message.role, "content": message.content}
-        for message in messages
-        if message.content.strip()
+def _is_non_empty_history_message(message: ChatMessage) -> bool:
+    return bool(message.content.strip() or message.has_image or message.detections)
+
+
+def _serialize_history_message(message: ChatMessage) -> dict:
+    payload = {
+        "message_id": message.id,
+        "role": message.role,
+        "content": message.content,
+    }
+    if message.has_image or message.detections:
+        payload["has_image"] = bool(message.has_image)
+        payload["detections"] = list(message.detections or [])
+    return payload
+
+
+def _history_before_current_user_message(
+    history: HistoryChat, current_message_id: int
+) -> list[dict]:
+    current_msg = history.messages.only("id", "created_at").get(id=current_message_id)
+    prior_completed_messages = list(
+        history.messages.filter(processing_status="complete")
+        .filter(
+            Q(created_at__lt=current_msg.created_at)
+            | Q(created_at=current_msg.created_at, id__lt=current_msg.id)
+        )
+        .order_by("-created_at", "-id")[:30]
+    )
+    prior_completed_messages.reverse()
+
+    prior_user_ids = [msg.id for msg in prior_completed_messages if msg.role == "user"]
+    linked_assistants_by_user_id: dict[int, ChatMessage] = {}
+    all_linked_user_ids: set[int] = set()
+    if prior_user_ids:
+        for assistant_msg in history.messages.filter(
+            role="assistant",
+            reply_to_id__in=prior_user_ids,
+        ).order_by("created_at", "id"):
+            all_linked_user_ids.add(assistant_msg.reply_to_id)
+            if (
+                assistant_msg.processing_status == "complete"
+                and assistant_msg.reply_to_id not in linked_assistants_by_user_id
+            ):
+                linked_assistants_by_user_id[assistant_msg.reply_to_id] = assistant_msg
+
+    ordered_messages: list[ChatMessage] = []
+    idx = 0
+    total = len(prior_completed_messages)
+    while idx < total:
+        msg = prior_completed_messages[idx]
+        if msg.role == "user":
+            linked_assistant = linked_assistants_by_user_id.get(msg.id)
+            if linked_assistant is not None:
+                ordered_messages.append(msg)
+                ordered_messages.append(linked_assistant)
+                idx += 1
+                continue
+            if (
+                msg.id not in all_linked_user_ids
+                and idx + 1 < total
+                and prior_completed_messages[idx + 1].role == "assistant"
+                and prior_completed_messages[idx + 1].reply_to_id is None
+            ):
+                ordered_messages.append(msg)
+                ordered_messages.append(prior_completed_messages[idx + 1])
+                idx += 2
+                continue
+            idx += 1
+        elif msg.role == "assistant":
+            if msg.reply_to_id is None:
+                ordered_messages.append(msg)
+            idx += 1
+        else:
+            idx += 1
+
+    serialized = [
+        _serialize_history_message(message)
+        for message in ordered_messages
+        if _is_non_empty_history_message(message)
     ]
+    return serialized[-10:]
 
 
 def _failure_response(failure):
@@ -75,17 +148,35 @@ class ChatView(APIView):
         except HistoryChat.DoesNotExist:
             return Response({"detail": "Không tìm thấy cuộc trò chuyện."}, status=status.HTTP_404_NOT_FOUND)
 
-        ChatMessage.objects.create(history=history, role="user", content=question)
+        user_msg = ChatMessage.objects.create(
+            history=history,
+            role="user",
+            content=question,
+            processing_status="pending",
+        )
         request_id = _request_id(request)
         result = RagClient().ask_text(
             question=question,
-            history=_history_before_current_user_message(history, question),
+            history=_history_before_current_user_message(history, user_msg.id),
             request_id=request_id,
         )
         if isinstance(result, ServiceFailure):
+            user_msg.processing_status = "failed"
+            user_msg.save(update_fields=["processing_status"])
             return _failure_response(result)
-        ChatMessage.objects.create(history=history, role="assistant", content=result.answer)
-        history.save(update_fields=["updated_at"])
+        with transaction.atomic():
+            assistant_msg = ChatMessage(
+                history=history,
+                role="assistant",
+                content=result.answer,
+                processing_status="complete",
+                reply_to=user_msg,
+            )
+            assistant_msg.full_clean()
+            assistant_msg.save()
+            user_msg.processing_status = "complete"
+            user_msg.save(update_fields=["processing_status"])
+            history.save(update_fields=["updated_at"])
         return Response(
             {
                 "question": question,
@@ -117,7 +208,12 @@ class ImageChatView(APIView):
         except HistoryChat.DoesNotExist:
             return Response({"detail": "Không tìm thấy cuộc trò chuyện."}, status=status.HTTP_404_NOT_FOUND)
 
-        ChatMessage.objects.create(history=history, role="user", content=question)
+        user_msg = ChatMessage.objects.create(
+            history=history,
+            role="user",
+            content=question,
+            processing_status="pending",
+        )
         request_id = _request_id(request)
         image.seek(0)
         yolo_result = YoloClient().predict(
@@ -127,23 +223,41 @@ class ImageChatView(APIView):
             request_id=request_id,
         )
         if isinstance(yolo_result, ServiceFailure):
+            user_msg.processing_status = "failed"
+            user_msg.save(update_fields=["processing_status"])
             return _failure_response(yolo_result)
         rag_result = RagClient().ask_image(
             question=question,
-            history=_history_before_current_user_message(history, question),
+            history=_history_before_current_user_message(history, user_msg.id),
             detections=yolo_result.detections,
             request_id=request_id,
         )
         if isinstance(rag_result, ServiceFailure):
+            user_msg.processing_status = "failed"
+            user_msg.save(update_fields=["processing_status"])
             return _failure_response(rag_result)
-        ChatMessage.objects.create(history=history, role="assistant", content=rag_result.answer)
-        history.save(update_fields=["updated_at"])
+        detections_payload = _detection_payload(rag_result.detections)
+        with transaction.atomic():
+            assistant_msg = ChatMessage(
+                history=history,
+                role="assistant",
+                content=rag_result.answer,
+                processing_status="complete",
+                reply_to=user_msg,
+            )
+            assistant_msg.full_clean()
+            assistant_msg.save()
+            user_msg.has_image = True
+            user_msg.detections = detections_payload
+            user_msg.processing_status = "complete"
+            user_msg.save(update_fields=["has_image", "detections", "processing_status"])
+            history.save(update_fields=["updated_at"])
         return Response(
             {
                 "question": question,
                 "answer": rag_result.answer,
                 "history_id": history.id,
-                "detections": _detection_payload(rag_result.detections),
+                "detections": detections_payload,
             },
             status=status.HTTP_200_OK,
             headers={"X-Request-ID": request_id},
