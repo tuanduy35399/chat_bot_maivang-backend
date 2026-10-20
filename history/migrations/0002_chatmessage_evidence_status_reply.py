@@ -1,7 +1,46 @@
-from itertools import groupby
-
 import django.db.models.deletion
 from django.db import migrations, models
+
+
+class HistoryWindow:
+    def __init__(self, commit_callback):
+        self.commit_callback = commit_callback
+        self.reset()
+
+    def reset(self):
+        self.prev_role = None
+        self.candidate_user = None
+        self.candidate_pair = None
+
+    def process(self, msg):
+        role = msg.role
+        if self.candidate_pair is not None:
+            if role == "assistant":
+                self.candidate_pair = None
+            else:
+                cand_u, cand_a = self.candidate_pair
+                self.candidate_pair = None
+                self.commit_callback(cand_u, cand_a)
+
+        if role == "user":
+            if self.prev_role == "user":
+                self.candidate_user = None
+            else:
+                self.candidate_user = msg
+        elif role == "assistant":
+            if self.candidate_user is not None:
+                if msg.reply_to_id is None:
+                    self.candidate_pair = (self.candidate_user, msg)
+                self.candidate_user = None
+
+        self.prev_role = role
+
+    def finish(self):
+        if self.candidate_pair is not None:
+            cand_u, cand_a = self.candidate_pair
+            self.candidate_pair = None
+            self.commit_callback(cand_u, cand_a)
+        self.reset()
 
 
 def backfill_reply_to(apps, schema_editor):
@@ -11,18 +50,30 @@ def backfill_reply_to(apps, schema_editor):
     ).order_by("history_id", "created_at", "id")
 
     to_update = []
-    for _, group in groupby(qs, key=lambda m: m.history_id):
-        messages = list(group)
-        n = len(messages)
-        for i in range(n - 1):
-            if messages[i].role == "user" and messages[i + 1].role == "assistant":
-                prev_is_user = i > 0 and messages[i - 1].role == "user"
-                next_is_assistant = i + 2 < n and messages[i + 2].role == "assistant"
-                if not prev_is_user and not next_is_assistant and messages[i + 1].reply_to_id is None:
-                    messages[i + 1].reply_to_id = messages[i].id
-                    to_update.append(messages[i + 1])
+
+    def commit_pair(user_msg, assistant_msg):
+        assistant_msg.reply_to_id = user_msg.id
+        to_update.append(assistant_msg)
+        if len(to_update) >= 500:
+            ChatMessage.objects.bulk_update(to_update, ["reply_to"], batch_size=500)
+            to_update.clear()
+
+    window = HistoryWindow(commit_pair)
+    current_history_id = None
+
+    for msg in qs.iterator(chunk_size=1000):
+        if msg.history_id != current_history_id:
+            if current_history_id is not None:
+                window.finish()
+            current_history_id = msg.history_id
+        window.process(msg)
+
+    if current_history_id is not None:
+        window.finish()
+
     if to_update:
         ChatMessage.objects.bulk_update(to_update, ["reply_to"], batch_size=500)
+        to_update.clear()
 
 
 class Migration(migrations.Migration):

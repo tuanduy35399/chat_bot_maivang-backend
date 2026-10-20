@@ -10,7 +10,9 @@ from backend import settings as backend_settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase, TestCase
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+from django.test import SimpleTestCase, TestCase, TransactionTestCase
 from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
@@ -514,3 +516,80 @@ class ChatMessageModelTests(TestCase):
 
         h6_a1.refresh_from_db()
         self.assertEqual(h6_a1.reply_to_id, h6_u1.id)
+
+
+class ChatMessageMigrationTests(TransactionTestCase):
+    def tearDown(self):
+        # Restore test database to latest migrations
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(executor.loader.graph.leaf_nodes())
+        super().tearDown()
+
+    def test_migration_0001_to_0002_backfill_and_defaults(self):
+        migrate_from = [("history", "0001_initial")]
+        migrate_to = [("history", "0002_chatmessage_evidence_status_reply")]
+
+        executor = MigrationExecutor(connection)
+        executor.migrate(migrate_from)
+
+        old_state = executor.loader.project_state(migrate_from)
+        old_apps = old_state.apps
+        OldUser = old_apps.get_model("user", "User")
+        OldHistoryChat = old_apps.get_model("history", "HistoryChat")
+        OldChatMessage = old_apps.get_model("history", "ChatMessage")
+
+        user = OldUser.objects.create(username="mig-user", email="mig@example.com")
+
+        # 1. Unambiguous legacy pair: user -> assistant
+        h1 = OldHistoryChat.objects.create(user=user, title="H1")
+        u1 = OldChatMessage.objects.create(history=h1, role="user", content="hello")
+        a1 = OldChatMessage.objects.create(history=h1, role="assistant", content="world")
+
+        # 2. Ambiguous legacy sequence: user -> user -> assistant
+        h2 = OldHistoryChat.objects.create(user=user, title="H2")
+        u2_1 = OldChatMessage.objects.create(history=h2, role="user", content="q1")
+        u2_2 = OldChatMessage.objects.create(history=h2, role="user", content="q2")
+        a2_1 = OldChatMessage.objects.create(history=h2, role="assistant", content="ans")
+
+        # Migrate forward to 0002
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(migrate_to)
+
+        new_state = executor.loader.project_state(migrate_to)
+        new_apps = new_state.apps
+        NewChatMessage = new_apps.get_model("history", "ChatMessage")
+
+        # Verify unambiguous user message
+        mig_u1 = NewChatMessage.objects.get(id=u1.id)
+        self.assertEqual(mig_u1.processing_status, "complete")
+        self.assertFalse(mig_u1.has_image)
+        self.assertEqual(mig_u1.detections, [])
+        self.assertIsNone(mig_u1.reply_to_id)
+
+        # Verify unambiguous assistant message receives reply_to link
+        mig_a1 = NewChatMessage.objects.get(id=a1.id)
+        self.assertEqual(mig_a1.processing_status, "complete")
+        self.assertFalse(mig_a1.has_image)
+        self.assertEqual(mig_a1.detections, [])
+        self.assertEqual(mig_a1.reply_to_id, u1.id)
+
+        # Verify ambiguous sequence rows remain unlinked
+        mig_u2_1 = NewChatMessage.objects.get(id=u2_1.id)
+        self.assertEqual(mig_u2_1.processing_status, "complete")
+        self.assertFalse(mig_u2_1.has_image)
+        self.assertEqual(mig_u2_1.detections, [])
+        self.assertIsNone(mig_u2_1.reply_to_id)
+
+        mig_u2_2 = NewChatMessage.objects.get(id=u2_2.id)
+        self.assertEqual(mig_u2_2.processing_status, "complete")
+        self.assertFalse(mig_u2_2.has_image)
+        self.assertEqual(mig_u2_2.detections, [])
+        self.assertIsNone(mig_u2_2.reply_to_id)
+
+        mig_a2_1 = NewChatMessage.objects.get(id=a2_1.id)
+        self.assertEqual(mig_a2_1.processing_status, "complete")
+        self.assertFalse(mig_a2_1.has_image)
+        self.assertEqual(mig_a2_1.detections, [])
+        self.assertIsNone(mig_a2_1.reply_to_id)
