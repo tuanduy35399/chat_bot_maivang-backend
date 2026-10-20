@@ -736,6 +736,132 @@ class ChatViewTests(APITestCase):
         self.assertEqual(assistant_item["processing_status"], "complete")
         self.assertEqual(assistant_item["detections"], [])
 
+    @patch("history.views.RagClient.ask_text")
+    @patch("history.views.RagClient.ask_image")
+    @patch("history.views.YoloClient.predict")
+    def test_unexpected_exception_marks_pending_user_message_failed(
+        self, mock_predict, mock_ask_image, mock_ask_text
+    ):
+        baseline_atomic_depth = len(connection.atomic_blocks)
+
+        def raise_in_ask_text(**_kwargs):
+            self.assertEqual(len(connection.atomic_blocks), baseline_atomic_depth)
+            raise RuntimeError("Token fetch or unexpected client error in ask_text")
+
+        def raise_in_predict(**_kwargs):
+            self.assertEqual(len(connection.atomic_blocks), baseline_atomic_depth)
+            raise RuntimeError("Unexpected client error in YoloClient.predict")
+
+        mock_ask_text.side_effect = raise_in_ask_text
+        with self.assertRaises(RuntimeError):
+            self.client.post(
+                reverse("history-chat", args=[self.history.id]),
+                {"question": "Câu hỏi gây lỗi ngoại lệ"},
+                format="json",
+            )
+
+        mock_predict.side_effect = raise_in_predict
+        with self.assertRaises(RuntimeError):
+            self.client.post(
+                reverse("history-image-chat", args=[self.history.id]),
+                {"image": image_file(), "question": "Ảnh gây lỗi ngoại lệ ở YOLO"},
+                format="multipart",
+            )
+
+        # Also test exception raised during RagClient.ask_image after YOLO succeeded
+        mock_predict.side_effect = None
+        mock_predict.return_value = YoloSuccess(
+            detections=(
+                YoloDetection(
+                    class_id=4,
+                    name="dom-la",
+                    confidence=0.9,
+                    bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+                ),
+            ),
+            request_id="req-exc-img",
+        )
+        mock_ask_image.side_effect = RuntimeError("Unexpected error in ask_image")
+        with self.assertRaises(RuntimeError):
+            self.client.post(
+                reverse("history-image-chat", args=[self.history.id]),
+                {"image": image_file(), "question": "Ảnh gây lỗi ngoại lệ ở RAG"},
+                format="multipart",
+            )
+
+        # Also test exception raised inside the final save atomic block (e.g., full_clean failure)
+        mock_ask_text.side_effect = None
+        mock_ask_text.return_value = RagSuccess(answer="Trả lời", request_id="req-exc-save")
+        with patch.object(ChatMessage, "full_clean", side_effect=ValidationError("Save validation failed")):
+            with self.assertRaises(ValidationError):
+                self.client.post(
+                    reverse("history-chat", args=[self.history.id]),
+                    {"question": "Câu hỏi lỗi lúc lưu assistant"},
+                    format="json",
+                )
+
+        msgs = list(ChatMessage.objects.filter(history=self.history).order_by("created_at", "id"))
+        self.assertEqual(len(msgs), 4)
+        for msg in msgs:
+            self.assertEqual(msg.role, "user")
+            self.assertEqual(msg.processing_status, "failed")
+            self.assertFalse(msg.has_image)
+            self.assertEqual(msg.detections, [])
+
+    def test_history_limit_does_not_split_completed_pair_on_odd_message_count(self):
+        from .views import _history_before_current_user_message
+
+        # Case 1: 5 completed pairs (10 messages) followed by 1 unlinked legacy assistant (total 11 valid messages)
+        pairs = []
+        for idx in range(1, 6):
+            u = ChatMessage.objects.create(
+                history=self.history,
+                role="user",
+                content=f"Câu hỏi cặp {idx}",
+                processing_status="complete",
+            )
+            a = ChatMessage(
+                history=self.history,
+                role="assistant",
+                content=f"Trả lời cặp {idx}",
+                processing_status="complete",
+                reply_to=u,
+            )
+            a.full_clean()
+            a.save()
+            pairs.append((u, a))
+
+        legacy_tail = ChatMessage.objects.create(
+            history=self.history,
+            role="assistant",
+            content="Tin assistant legacy đứng lẻ phía sau",
+            processing_status="complete",
+        )
+        current_u = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Câu hỏi hiện tại",
+            processing_status="pending",
+        )
+
+        history_payload = _history_before_current_user_message(self.history, current_u.id)
+        # Must NOT split pair 1 (leaving a1 without u1); instead drops pair 1 as a whole unit -> 4 pairs + 1 legacy = 9 messages
+        self.assertEqual(len(history_payload), 9)
+        self.assertEqual(history_payload[0]["role"], "user")
+        self.assertEqual(history_payload[0]["message_id"], pairs[1][0].id)
+        expected = []
+        for u, a in pairs[1:]:
+            expected.append({"message_id": u.id, "role": "user", "content": u.content})
+            expected.append({"message_id": a.id, "role": "assistant", "content": a.content})
+        expected.append(
+            {
+                "message_id": legacy_tail.id,
+                "role": "assistant",
+                "content": legacy_tail.content,
+            }
+        )
+        self.assertEqual(history_payload, expected)
+
 
 class ChatMessageModelTests(TestCase):
     def setUp(self):

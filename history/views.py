@@ -23,11 +23,19 @@ from .services.yolo_client import YoloClient
 
 
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+MAX_HISTORY_MESSAGES = 10
 
 
 def _request_id(request):
     candidate = request.headers.get("X-Request-ID", "")
     return candidate if REQUEST_ID_PATTERN.fullmatch(candidate) else str(uuid.uuid4())
+
+
+def _mark_user_message_failed(user_msg: ChatMessage) -> None:
+    user_msg.processing_status = "failed"
+    user_msg.has_image = False
+    user_msg.detections = []
+    user_msg.save(update_fields=["processing_status", "has_image", "detections"])
 
 
 def _is_non_empty_history_message(message: ChatMessage) -> bool:
@@ -75,7 +83,7 @@ def _history_before_current_user_message(
             ):
                 linked_assistants_by_user_id[assistant_msg.reply_to_id] = assistant_msg
 
-    ordered_messages: list[ChatMessage] = []
+    turn_units: list[list[dict]] = []
     idx = 0
     total = len(prior_completed_messages)
     while idx < total:
@@ -83,8 +91,13 @@ def _history_before_current_user_message(
         if msg.role == "user":
             linked_assistant = linked_assistants_by_user_id.get(msg.id)
             if linked_assistant is not None:
-                ordered_messages.append(msg)
-                ordered_messages.append(linked_assistant)
+                unit = [
+                    _serialize_history_message(item)
+                    for item in (msg, linked_assistant)
+                    if _is_non_empty_history_message(item)
+                ]
+                if unit:
+                    turn_units.append(unit)
                 idx += 1
                 continue
             if (
@@ -93,24 +106,32 @@ def _history_before_current_user_message(
                 and prior_completed_messages[idx + 1].role == "assistant"
                 and prior_completed_messages[idx + 1].reply_to_id is None
             ):
-                ordered_messages.append(msg)
-                ordered_messages.append(prior_completed_messages[idx + 1])
+                unit = [
+                    _serialize_history_message(item)
+                    for item in (msg, prior_completed_messages[idx + 1])
+                    if _is_non_empty_history_message(item)
+                ]
+                if unit:
+                    turn_units.append(unit)
                 idx += 2
                 continue
             idx += 1
         elif msg.role == "assistant":
-            if msg.reply_to_id is None:
-                ordered_messages.append(msg)
+            if msg.reply_to_id is None and _is_non_empty_history_message(msg):
+                turn_units.append([_serialize_history_message(msg)])
             idx += 1
         else:
             idx += 1
 
-    serialized = [
-        _serialize_history_message(message)
-        for message in ordered_messages
-        if _is_non_empty_history_message(message)
-    ]
-    return serialized[-10:]
+    selected_units: list[list[dict]] = []
+    message_count = 0
+    for unit in reversed(turn_units):
+        if message_count + len(unit) > MAX_HISTORY_MESSAGES:
+            break
+        selected_units.append(unit)
+        message_count += len(unit)
+    selected_units.reverse()
+    return [message for unit in selected_units for message in unit]
 
 
 def _failure_response(failure):
@@ -154,29 +175,32 @@ class ChatView(APIView):
             content=question,
             processing_status="pending",
         )
-        request_id = _request_id(request)
-        result = RagClient().ask_text(
-            question=question,
-            history=_history_before_current_user_message(history, user_msg.id),
-            request_id=request_id,
-        )
-        if isinstance(result, ServiceFailure):
-            user_msg.processing_status = "failed"
-            user_msg.save(update_fields=["processing_status"])
-            return _failure_response(result)
-        with transaction.atomic():
-            assistant_msg = ChatMessage(
-                history=history,
-                role="assistant",
-                content=result.answer,
-                processing_status="complete",
-                reply_to=user_msg,
+        try:
+            request_id = _request_id(request)
+            result = RagClient().ask_text(
+                question=question,
+                history=_history_before_current_user_message(history, user_msg.id),
+                request_id=request_id,
             )
-            assistant_msg.full_clean()
-            assistant_msg.save()
-            user_msg.processing_status = "complete"
-            user_msg.save(update_fields=["processing_status"])
-            history.save(update_fields=["updated_at"])
+            if isinstance(result, ServiceFailure):
+                _mark_user_message_failed(user_msg)
+                return _failure_response(result)
+            with transaction.atomic():
+                assistant_msg = ChatMessage(
+                    history=history,
+                    role="assistant",
+                    content=result.answer,
+                    processing_status="complete",
+                    reply_to=user_msg,
+                )
+                assistant_msg.full_clean()
+                assistant_msg.save()
+                user_msg.processing_status = "complete"
+                user_msg.save(update_fields=["processing_status"])
+                history.save(update_fields=["updated_at"])
+        except Exception:
+            _mark_user_message_failed(user_msg)
+            raise
         return Response(
             {
                 "question": question,
@@ -214,44 +238,46 @@ class ImageChatView(APIView):
             content=question,
             processing_status="pending",
         )
-        request_id = _request_id(request)
-        image.seek(0)
-        yolo_result = YoloClient().predict(
-            image_bytes=image.read(),
-            filename=image.name,
-            content_type=image.content_type,
-            request_id=request_id,
-        )
-        if isinstance(yolo_result, ServiceFailure):
-            user_msg.processing_status = "failed"
-            user_msg.save(update_fields=["processing_status"])
-            return _failure_response(yolo_result)
-        rag_result = RagClient().ask_image(
-            question=question,
-            history=_history_before_current_user_message(history, user_msg.id),
-            detections=yolo_result.detections,
-            request_id=request_id,
-        )
-        if isinstance(rag_result, ServiceFailure):
-            user_msg.processing_status = "failed"
-            user_msg.save(update_fields=["processing_status"])
-            return _failure_response(rag_result)
-        detections_payload = _detection_payload(rag_result.detections)
-        with transaction.atomic():
-            assistant_msg = ChatMessage(
-                history=history,
-                role="assistant",
-                content=rag_result.answer,
-                processing_status="complete",
-                reply_to=user_msg,
+        try:
+            request_id = _request_id(request)
+            image.seek(0)
+            yolo_result = YoloClient().predict(
+                image_bytes=image.read(),
+                filename=image.name,
+                content_type=image.content_type,
+                request_id=request_id,
             )
-            assistant_msg.full_clean()
-            assistant_msg.save()
-            user_msg.has_image = True
-            user_msg.detections = detections_payload
-            user_msg.processing_status = "complete"
-            user_msg.save(update_fields=["has_image", "detections", "processing_status"])
-            history.save(update_fields=["updated_at"])
+            if isinstance(yolo_result, ServiceFailure):
+                _mark_user_message_failed(user_msg)
+                return _failure_response(yolo_result)
+            rag_result = RagClient().ask_image(
+                question=question,
+                history=_history_before_current_user_message(history, user_msg.id),
+                detections=yolo_result.detections,
+                request_id=request_id,
+            )
+            if isinstance(rag_result, ServiceFailure):
+                _mark_user_message_failed(user_msg)
+                return _failure_response(rag_result)
+            detections_payload = _detection_payload(rag_result.detections)
+            with transaction.atomic():
+                assistant_msg = ChatMessage(
+                    history=history,
+                    role="assistant",
+                    content=rag_result.answer,
+                    processing_status="complete",
+                    reply_to=user_msg,
+                )
+                assistant_msg.full_clean()
+                assistant_msg.save()
+                user_msg.has_image = True
+                user_msg.detections = detections_payload
+                user_msg.processing_status = "complete"
+                user_msg.save(update_fields=["has_image", "detections", "processing_status"])
+                history.save(update_fields=["updated_at"])
+        except Exception:
+            _mark_user_message_failed(user_msg)
+            raise
         return Response(
             {
                 "question": question,
