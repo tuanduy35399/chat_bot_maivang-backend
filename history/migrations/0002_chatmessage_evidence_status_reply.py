@@ -1,18 +1,18 @@
+from itertools import groupby
+
 import django.db.models.deletion
 from django.db import migrations, models
 
 
 def backfill_reply_to(apps, schema_editor):
     ChatMessage = apps.get_model("history", "ChatMessage")
-    history_ids = (
-        ChatMessage.objects.values_list("history_id", flat=True)
-        .distinct()
-    )
+    qs = ChatMessage.objects.only(
+        "id", "history_id", "role", "reply_to_id", "created_at"
+    ).order_by("history_id", "created_at", "id")
+
     to_update = []
-    for hid in history_ids:
-        messages = list(
-            ChatMessage.objects.filter(history_id=hid).order_by("created_at", "id")
-        )
+    for _, group in groupby(qs, key=lambda m: m.history_id):
+        messages = list(group)
         n = len(messages)
         for i in range(n - 1):
             if messages[i].role == "user" and messages[i + 1].role == "assistant":
@@ -22,7 +22,7 @@ def backfill_reply_to(apps, schema_editor):
                     messages[i + 1].reply_to_id = messages[i].id
                     to_update.append(messages[i + 1])
     if to_update:
-        ChatMessage.objects.bulk_update(to_update, ["reply_to"])
+        ChatMessage.objects.bulk_update(to_update, ["reply_to"], batch_size=500)
 
 
 class Migration(migrations.Migration):

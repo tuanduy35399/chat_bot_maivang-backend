@@ -60,12 +60,21 @@ class ChatMessage(models.Model):
 
     def clean(self):
         super().clean()
-        if self.reply_to is not None:
+        try:
+            target = self.reply_to
+        except ChatMessage.DoesNotExist:
+            raise ValidationError({"reply_to": "reply_to links to a non-existent message."})
+
+        if target is not None:
             if self.role != "assistant":
                 raise ValidationError({"reply_to": "Only assistant messages can have reply_to."})
-            if self.reply_to.role != "user":
+            if target.role != "user":
                 raise ValidationError({"reply_to": "reply_to must link to a user message."})
-            if self.reply_to.history_id != self.history_id:
+            target_hid = getattr(target, "history_id", None)
+            curr_hid = getattr(self, "history_id", None)
+            if target_hid != curr_hid or (
+                target_hid is None and getattr(target, "history", None) != getattr(self, "history", None)
+            ):
                 raise ValidationError({"reply_to": "reply_to must link to a message in the same chat history."})
 
     def __str__(self):

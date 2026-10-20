@@ -349,8 +349,9 @@ class ChatMessageModelTests(TestCase):
             content="Hỏi tiếp",
             reply_to=img_msg,
         )
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as cm:
             invalid_user_msg.full_clean()
+        self.assertIn("reply_to", cm.exception.message_dict)
 
         # Invariant 2: Assistant message cannot reply to another assistant message
         invalid_asst_to_asst = ChatMessage(
@@ -359,8 +360,9 @@ class ChatMessageModelTests(TestCase):
             content="Trả lời phụ",
             reply_to=reply_msg,
         )
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as cm:
             invalid_asst_to_asst.full_clean()
+        self.assertIn("reply_to", cm.exception.message_dict)
 
         # Invariant 3: Assistant message cannot reply to a user message from a different HistoryChat
         other_history = HistoryChat.objects.create(
@@ -378,8 +380,54 @@ class ChatMessageModelTests(TestCase):
             content="Trả lời nhầm đoạn chat",
             reply_to=other_user_msg,
         )
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as cm:
             cross_chat_reply.full_clean()
+        self.assertIn("reply_to", cm.exception.message_dict)
+
+        # Invariant 4: Non-existent reply_to_id
+        non_existent_reply = ChatMessage(
+            history=self.history,
+            role="assistant",
+            content="Trả lời tin nhắn không tồn tại",
+            reply_to_id=999999,
+        )
+        with self.assertRaises(ValidationError) as cm:
+            non_existent_reply.full_clean()
+        self.assertIn("reply_to", cm.exception.message_dict)
+
+        # Invariant 5: Unsaved in-memory HistoryChat cross-reference
+        unsaved_history_1 = HistoryChat(user=self.user, title="Unsaved 1")
+        unsaved_history_2 = HistoryChat(user=self.user, title="Unsaved 2")
+        unsaved_user_msg = ChatMessage(history=unsaved_history_1, role="user", content="u")
+        cross_unsaved_reply = ChatMessage(
+            history=unsaved_history_2,
+            role="assistant",
+            content="cross unsaved",
+            reply_to=unsaved_user_msg,
+        )
+        with self.assertRaises(ValidationError) as cm:
+            cross_unsaved_reply.clean()
+        self.assertIn("reply_to", cm.exception.message_dict)
+
+        # Valid unsaved in-memory HistoryChat with matching history passes clean()
+        valid_unsaved_reply = ChatMessage(
+            history=unsaved_history_1,
+            role="assistant",
+            content="valid unsaved",
+            reply_to=unsaved_user_msg,
+        )
+        valid_unsaved_reply.clean()
+
+        # Invariant 6: Invalid processing_status choice raises ValidationError
+        invalid_status_msg = ChatMessage(
+            history=self.history,
+            role="user",
+            content="Trạng thái không hợp lệ",
+            processing_status="unknown_status",
+        )
+        with self.assertRaises(ValidationError) as cm:
+            invalid_status_msg.full_clean()
+        self.assertIn("processing_status", cm.exception.message_dict)
 
         # Ordering check: ordering by created_at, id
         self.assertEqual(ChatMessage._meta.ordering, ["created_at", "id"])
