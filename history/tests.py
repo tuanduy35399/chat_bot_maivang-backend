@@ -9,7 +9,8 @@ from PIL import Image
 from backend import settings as backend_settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import SimpleTestCase
+from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
@@ -281,3 +282,187 @@ class ChatViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(ChatMessage.objects.filter(history=other_history).count(), 0)
+
+
+class ChatMessageModelTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="model-user",
+            name="Model User",
+            email="model-user@example.com",
+            password="Strong-password-123!",
+        )
+        self.history = HistoryChat.objects.create(
+            user=self.user,
+            title="Cuộc trò chuyện thử nghiệm",
+        )
+
+    def test_chat_message_evidence_defaults_and_reply_link(self):
+        # Default values on creation
+        msg = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Xin chào",
+        )
+        self.assertFalse(msg.has_image)
+        self.assertEqual(msg.detections, [])
+        self.assertEqual(msg.processing_status, "complete")
+        self.assertIsNone(msg.reply_to)
+
+        # Image message with blank content and detections passes full_clean
+        img_msg = ChatMessage(
+            history=self.history,
+            role="user",
+            content="",
+            has_image=True,
+            detections=[{"class_id": 4, "name": "dom-la", "confidence": 0.89}],
+        )
+        img_msg.full_clean()
+        img_msg.save()
+        self.assertTrue(img_msg.has_image)
+        self.assertEqual(len(img_msg.detections), 1)
+
+        # Blank text-only message also passes full_clean
+        blank_msg = ChatMessage(
+            history=self.history,
+            role="user",
+            content="",
+        )
+        blank_msg.full_clean()
+
+        # Valid assistant reply_to pointing to user message in same history passes full_clean
+        reply_msg = ChatMessage(
+            history=self.history,
+            role="assistant",
+            content="Cây mai bị đốm lá.",
+            reply_to=img_msg,
+        )
+        reply_msg.full_clean()
+        reply_msg.save()
+        self.assertEqual(reply_msg.reply_to, img_msg)
+        self.assertEqual(list(img_msg.assistant_replies.all()), [reply_msg])
+
+        # Invariant 1: User message cannot have reply_to
+        invalid_user_msg = ChatMessage(
+            history=self.history,
+            role="user",
+            content="Hỏi tiếp",
+            reply_to=img_msg,
+        )
+        with self.assertRaises(ValidationError):
+            invalid_user_msg.full_clean()
+
+        # Invariant 2: Assistant message cannot reply to another assistant message
+        invalid_asst_to_asst = ChatMessage(
+            history=self.history,
+            role="assistant",
+            content="Trả lời phụ",
+            reply_to=reply_msg,
+        )
+        with self.assertRaises(ValidationError):
+            invalid_asst_to_asst.full_clean()
+
+        # Invariant 3: Assistant message cannot reply to a user message from a different HistoryChat
+        other_history = HistoryChat.objects.create(
+            user=self.user,
+            title="Cuộc trò chuyện khác",
+        )
+        other_user_msg = ChatMessage.objects.create(
+            history=other_history,
+            role="user",
+            content="Tin nhắn ở đoạn chat khác",
+        )
+        cross_chat_reply = ChatMessage(
+            history=self.history,
+            role="assistant",
+            content="Trả lời nhầm đoạn chat",
+            reply_to=other_user_msg,
+        )
+        with self.assertRaises(ValidationError):
+            cross_chat_reply.full_clean()
+
+        # Ordering check: ordering by created_at, id
+        self.assertEqual(ChatMessage._meta.ordering, ["created_at", "id"])
+
+    def test_legacy_messages_have_complete_processing_status_and_null_reply_to(self):
+        msg = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Tin nhắn cũ",
+        )
+        self.assertEqual(msg.processing_status, "complete")
+        self.assertIsNone(msg.reply_to)
+
+    def test_migration_backfill_unambiguous_and_ambiguous_pairs(self):
+        import importlib
+        migration_module = importlib.import_module("history.migrations.0002_chatmessage_evidence_status_reply")
+        backfill_reply_to = migration_module.backfill_reply_to
+        from django.apps import apps
+
+        # History 1: Unambiguous adjacent pair (u1, a1)
+        h1 = HistoryChat.objects.create(user=self.user, title="H1")
+        h1_u1 = ChatMessage.objects.create(history=h1, role="user", content="u1")
+        h1_a1 = ChatMessage.objects.create(history=h1, role="assistant", content="a1")
+
+        # History 2: Multiple unambiguous pairs (u1, a1) and (u2, a2)
+        h2 = HistoryChat.objects.create(user=self.user, title="H2")
+        h2_u1 = ChatMessage.objects.create(history=h2, role="user", content="u1")
+        h2_a1 = ChatMessage.objects.create(history=h2, role="assistant", content="a1")
+        h2_u2 = ChatMessage.objects.create(history=h2, role="user", content="u2")
+        h2_a2 = ChatMessage.objects.create(history=h2, role="assistant", content="a2")
+
+        # History 3: Ambiguous consecutive user messages (u1, u2, a1)
+        h3 = HistoryChat.objects.create(user=self.user, title="H3")
+        h3_u1 = ChatMessage.objects.create(history=h3, role="user", content="u1")
+        h3_u2 = ChatMessage.objects.create(history=h3, role="user", content="u2")
+        h3_a1 = ChatMessage.objects.create(history=h3, role="assistant", content="a1")
+
+        # History 4: Ambiguous consecutive assistant messages (u1, a1, a2)
+        h4 = HistoryChat.objects.create(user=self.user, title="H4")
+        h4_u1 = ChatMessage.objects.create(history=h4, role="user", content="u1")
+        h4_a1 = ChatMessage.objects.create(history=h4, role="assistant", content="a1")
+        h4_a2 = ChatMessage.objects.create(history=h4, role="assistant", content="a2")
+
+        # History 5: Mixed history - ambiguous (u1, a1, a2) followed by unambiguous (u2, a3)
+        h5 = HistoryChat.objects.create(user=self.user, title="H5")
+        h5_u1 = ChatMessage.objects.create(history=h5, role="user", content="u1")
+        h5_a1 = ChatMessage.objects.create(history=h5, role="assistant", content="a1")
+        h5_a2 = ChatMessage.objects.create(history=h5, role="assistant", content="a2")
+        h5_u2 = ChatMessage.objects.create(history=h5, role="user", content="u2")
+        h5_a3 = ChatMessage.objects.create(history=h5, role="assistant", content="a3")
+
+        # History 6: Assistant already has reply_to set - should not be modified
+        h6 = HistoryChat.objects.create(user=self.user, title="H6")
+        h6_u1 = ChatMessage.objects.create(history=h6, role="user", content="u1")
+        h6_u2 = ChatMessage.objects.create(history=h6, role="user", content="u2")
+        h6_a1 = ChatMessage.objects.create(history=h6, role="assistant", content="a1", reply_to=h6_u1)
+
+        # Run migration backfill function
+        backfill_reply_to(apps, None)
+
+        # Assertions
+        h1_a1.refresh_from_db()
+        self.assertEqual(h1_a1.reply_to_id, h1_u1.id)
+
+        h2_a1.refresh_from_db()
+        h2_a2.refresh_from_db()
+        self.assertEqual(h2_a1.reply_to_id, h2_u1.id)
+        self.assertEqual(h2_a2.reply_to_id, h2_u2.id)
+
+        h3_a1.refresh_from_db()
+        self.assertIsNone(h3_a1.reply_to_id)
+
+        h4_a1.refresh_from_db()
+        h4_a2.refresh_from_db()
+        self.assertIsNone(h4_a1.reply_to_id)
+        self.assertIsNone(h4_a2.reply_to_id)
+
+        h5_a1.refresh_from_db()
+        h5_a2.refresh_from_db()
+        h5_a3.refresh_from_db()
+        self.assertIsNone(h5_a1.reply_to_id)
+        self.assertIsNone(h5_a2.reply_to_id)
+        self.assertEqual(h5_a3.reply_to_id, h5_u2.id)
+
+        h6_a1.refresh_from_db()
+        self.assertEqual(h6_a1.reply_to_id, h6_u1.id)
