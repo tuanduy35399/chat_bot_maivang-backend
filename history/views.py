@@ -23,7 +23,8 @@ from .services.yolo_client import YoloClient
 
 
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
-MAX_HISTORY_MESSAGES = 10
+MAX_HISTORY_MESSAGES = 20
+MAX_HISTORY_MESSAGE_CHARS = 1200
 
 
 def _request_id(request):
@@ -43,10 +44,13 @@ def _is_non_empty_history_message(message: ChatMessage) -> bool:
 
 
 def _serialize_history_message(message: ChatMessage) -> dict:
+    content = message.content
+    if len(content) > MAX_HISTORY_MESSAGE_CHARS:
+        content = content[: MAX_HISTORY_MESSAGE_CHARS - 1] + "…"
     payload = {
         "message_id": message.id,
         "role": message.role,
-        "content": message.content,
+        "content": content,
     }
     if message.has_image or message.detections:
         payload["has_image"] = bool(message.has_image)
@@ -64,7 +68,7 @@ def _history_before_current_user_message(
             Q(created_at__lt=current_msg.created_at)
             | Q(created_at=current_msg.created_at, id__lt=current_msg.id)
         )
-        .order_by("-created_at", "-id")[:30]
+        .order_by("-created_at", "-id")[:60]
     )
     prior_completed_messages.reverse()
 

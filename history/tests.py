@@ -635,9 +635,9 @@ class ChatViewTests(APITestCase):
         self.assertEqual(mock_ask_text.call_args_list[1].kwargs["history"], [])
 
     @patch("history.views.RagClient.ask_text")
-    def test_history_limit_is_ten_messages_not_ten_pairs(self, mock_ask):
+    def test_history_limit_is_twenty_messages_not_twenty_pairs(self, mock_ask):
         created_pairs = []
-        for idx in range(1, 7):
+        for idx in range(1, 12):
             u = ChatMessage.objects.create(
                 history=self.history,
                 role="user",
@@ -655,15 +655,15 @@ class ChatViewTests(APITestCase):
             a.save()
             created_pairs.append((u, a))
 
-        mock_ask.return_value = RagSuccess(answer="Trả lời 7", request_id="req-7")
+        mock_ask.return_value = RagSuccess(answer="Trả lời 12", request_id="req-12")
         response = self.client.post(
             reverse("history-chat", args=[self.history.id]),
-            {"question": "Câu hỏi 7"},
+            {"question": "Câu hỏi 12"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
         forwarded_history = mock_ask.call_args.kwargs["history"]
-        self.assertEqual(len(forwarded_history), 10)
+        self.assertEqual(len(forwarded_history), 20)
         expected_messages = []
         for u, a in created_pairs[1:]:
             expected_messages.append({"message_id": u.id, "role": "user", "content": u.content})
@@ -811,9 +811,9 @@ class ChatViewTests(APITestCase):
     def test_history_limit_does_not_split_completed_pair_on_odd_message_count(self):
         from .views import _history_before_current_user_message
 
-        # Case 1: 5 completed pairs (10 messages) followed by 1 unlinked legacy assistant (total 11 valid messages)
+        # 10 completed pairs plus one legacy assistant: keep nine full pairs and the tail.
         pairs = []
-        for idx in range(1, 6):
+        for idx in range(1, 11):
             u = ChatMessage.objects.create(
                 history=self.history,
                 role="user",
@@ -845,8 +845,8 @@ class ChatViewTests(APITestCase):
         )
 
         history_payload = _history_before_current_user_message(self.history, current_u.id)
-        # Must NOT split pair 1 (leaving a1 without u1); instead drops pair 1 as a whole unit -> 4 pairs + 1 legacy = 9 messages
-        self.assertEqual(len(history_payload), 9)
+        # Drop pair 1 as a whole unit: nine pairs and one legacy message.
+        self.assertEqual(len(history_payload), 19)
         self.assertEqual(history_payload[0]["role"], "user")
         self.assertEqual(history_payload[0]["message_id"], pairs[1][0].id)
         expected = []
@@ -861,6 +861,34 @@ class ChatViewTests(APITestCase):
             }
         )
         self.assertEqual(history_payload, expected)
+
+    def test_long_history_message_is_clipped_for_router_budget(self):
+        from .views import _history_before_current_user_message
+
+        previous_user = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="x" * 1600,
+            processing_status="complete",
+        )
+        previous_assistant = ChatMessage.objects.create(
+            history=self.history,
+            role="assistant",
+            content="y" * 1600,
+            processing_status="complete",
+            reply_to=previous_user,
+        )
+        current = ChatMessage.objects.create(
+            history=self.history,
+            role="user",
+            content="Câu hỏi hiện tại",
+            processing_status="pending",
+        )
+
+        payload = _history_before_current_user_message(self.history, current.id)
+
+        self.assertEqual([item["message_id"] for item in payload], [previous_user.id, previous_assistant.id])
+        self.assertEqual([len(item["content"]) for item in payload], [1200, 1200])
 
 
 class ChatMessageModelTests(TestCase):
