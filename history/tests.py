@@ -1,6 +1,7 @@
 import os
 import re
 import runpy
+from threading import Event
 from io import BytesIO
 from unittest.mock import patch
 
@@ -17,6 +18,7 @@ from rest_framework.test import APITestCase
 
 from .models import ChatMessage, HistoryChat
 from .services.contracts import RagDetection, RagSuccess, ServiceFailure, YoloDetection, YoloSuccess
+from .services.sse import encode_sse_event, keep_alive_frame, stream_operation
 
 
 def image_file():
@@ -27,6 +29,80 @@ def image_file():
     stream.name = "leaf.png"
     stream.content_type = "image/png"
     return stream
+
+
+class SseFrameTests(SimpleTestCase):
+    def test_encode_sse_event_serializes_json_and_terminates_frame(self):
+        frame = encode_sse_event({
+            "type": "progress",
+            "stage": "preparing",
+            "message": "Đang chuẩn bị câu hỏi...",
+        })
+
+        self.assertEqual(
+            frame,
+            'data: {"type":"progress","stage":"preparing","message":"Đang chuẩn bị câu hỏi..."}\n\n',
+        )
+
+    def test_keep_alive_frame_is_an_sse_comment(self):
+        self.assertEqual(keep_alive_frame(), ": keep-alive\n\n")
+
+    def test_stream_operation_emits_progress_heartbeat_and_terminal_event(self):
+        started = Event()
+        release = Event()
+
+        def operation():
+            started.set()
+            release.wait(timeout=1)
+            return {"type": "complete", "answer": "Đã xong."}
+
+        stream = iter(stream_operation(
+            operation,
+            progress_payloads=(
+                {"type": "progress", "stage": "preparing"},
+                {"type": "progress", "stage": "processing"},
+            ),
+            heartbeat_seconds=0.01,
+            error_payload=lambda error: {"type": "error", "message": str(error)},
+        ))
+
+        self.assertEqual(next(stream), 'data: {"type":"progress","stage":"preparing"}\n\n')
+        self.assertEqual(next(stream), 'data: {"type":"progress","stage":"processing"}\n\n')
+        self.assertEqual(next(stream), ": keep-alive\n\n")
+        self.assertTrue(started.wait(timeout=1))
+        release.set()
+        self.assertEqual(next(stream), 'data: {"type":"complete","answer":"Đã xong."}\n\n')
+
+    def test_stream_operation_converts_worker_exception_to_error_event(self):
+        def operation():
+            raise RuntimeError("RAG failed")
+
+        frames = list(stream_operation(
+            operation,
+            progress_payloads=(),
+            error_payload=lambda error: {"type": "error", "message": str(error)},
+        ))
+
+        self.assertEqual(frames, ['data: {"type":"error","message":"RAG failed"}\n\n'])
+
+    def test_stream_operation_maps_unserializable_terminal_result_to_error(self):
+        frames = list(stream_operation(
+            lambda: {"type": "complete", "answer": object()},
+            progress_payloads=(),
+            error_payload=lambda error: {"type": "error", "message": str(error)},
+        ))
+
+        self.assertEqual(frames[0][:7], "data: {")
+        self.assertIn('"type":"error"', frames[0])
+
+    def test_stream_operation_rejects_non_positive_heartbeat(self):
+        with self.assertRaises(ValueError):
+            list(stream_operation(
+                lambda: {"type": "complete"},
+                progress_payloads=(),
+                heartbeat_seconds=0,
+                error_payload=lambda error: {"type": "error", "message": str(error)},
+            ))
 
 
 class SettingsDefaultsTests(SimpleTestCase):
