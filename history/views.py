@@ -161,7 +161,6 @@ def _detection_payload(detections: tuple[RagDetection, ...]):
 def _stream_response(stream, request_id: str) -> StreamingHttpResponse:
     response = StreamingHttpResponse(stream, content_type="text/event-stream; charset=utf-8")
     response["Cache-Control"] = "no-cache"
-    response["Connection"] = "keep-alive"
     response["X-Accel-Buffering"] = "no"
     response["X-Request-ID"] = request_id
     return response

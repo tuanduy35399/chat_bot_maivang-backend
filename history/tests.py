@@ -1,6 +1,7 @@
 import os
 import re
 import runpy
+from wsgiref.util import is_hop_by_hop
 from threading import Event
 from io import BytesIO
 from unittest.mock import patch
@@ -244,6 +245,10 @@ class ChatViewTests(APITestCase):
         self.assertIn('"answer":"Bạn nên kiểm tra độ ẩm đất."', body)
         self.assertIn('"history_id":%d' % self.history.id, body)
         self.assertTrue(response["Content-Type"].startswith("text/event-stream"))
+        self.assertFalse(
+            [name for name, _ in response.items() if is_hop_by_hop(name)],
+            "WSGI rejects application-supplied hop-by-hop headers",
+        )
         self.assertEqual(response["X-Request-ID"], "req-stream-1")
         self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 2)
 
