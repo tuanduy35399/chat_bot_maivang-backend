@@ -7,6 +7,8 @@ from math import isfinite
 from queue import Empty, Queue
 from threading import Thread
 
+from django.db import close_old_connections
+
 
 def encode_sse_event(payload: Mapping[str, object]) -> str:
     """Encode one JSON payload as a complete server-sent event frame."""
@@ -45,10 +47,13 @@ def stream_operation(
     result_queue: Queue[tuple[str, object]] = Queue(maxsize=1)
 
     def run_operation() -> None:
+        close_old_connections()
         try:
             result_queue.put(("result", operation()))
         except Exception as error:  # Convert worker failures into terminal SSE data.
             result_queue.put(("error", error))
+        finally:
+            close_old_connections()
 
     worker = Thread(target=run_operation, name="chat-sse-operation", daemon=True)
     worker.start()

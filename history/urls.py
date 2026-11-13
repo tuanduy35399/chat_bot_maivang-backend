@@ -5,6 +5,8 @@ from .views import (
     HistoryDetailView,
     ChatView,
     ImageChatView,
+    ChatStreamView,
+    ImageChatStreamView,
 )
 
 
@@ -29,8 +31,20 @@ urlpatterns = [
     ),
 
     path(
+        "<int:pk>/chat/stream/",
+        ChatStreamView.as_view(),
+        name="history-chat-stream"
+    ),
+
+    path(
         "<int:pk>/chat/image/",
         ImageChatView.as_view(),
         name="history-image-chat"
+    ),
+
+    path(
+        "<int:pk>/chat/image/stream/",
+        ImageChatStreamView.as_view(),
+        name="history-image-chat-stream"
     ),
 ]

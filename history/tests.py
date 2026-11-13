@@ -31,6 +31,15 @@ def image_file():
     return stream
 
 
+def inline_stream_operation(operation, *, progress_payloads, error_payload, **_kwargs):
+    for payload in progress_payloads:
+        yield encode_sse_event(payload)
+    try:
+        yield encode_sse_event(operation())
+    except Exception as error:
+        yield encode_sse_event(error_payload(error))
+
+
 class SseFrameTests(SimpleTestCase):
     def test_encode_sse_event_serializes_json_and_terminates_frame(self):
         frame = encode_sse_event({
@@ -56,22 +65,24 @@ class SseFrameTests(SimpleTestCase):
             release.wait(timeout=1)
             return {"type": "complete", "answer": "Đã xong."}
 
-        stream = iter(stream_operation(
-            operation,
-            progress_payloads=(
-                {"type": "progress", "stage": "preparing"},
-                {"type": "progress", "stage": "processing"},
-            ),
-            heartbeat_seconds=0.01,
-            error_payload=lambda error: {"type": "error", "message": str(error)},
-        ))
+        with patch("history.services.sse.close_old_connections") as close_connections:
+            stream = iter(stream_operation(
+                operation,
+                progress_payloads=(
+                    {"type": "progress", "stage": "preparing"},
+                    {"type": "progress", "stage": "processing"},
+                ),
+                heartbeat_seconds=0.01,
+                error_payload=lambda error: {"type": "error", "message": str(error)},
+            ))
 
-        self.assertEqual(next(stream), 'data: {"type":"progress","stage":"preparing"}\n\n')
-        self.assertEqual(next(stream), 'data: {"type":"progress","stage":"processing"}\n\n')
-        self.assertEqual(next(stream), ": keep-alive\n\n")
-        self.assertTrue(started.wait(timeout=1))
-        release.set()
-        self.assertEqual(next(stream), 'data: {"type":"complete","answer":"Đã xong."}\n\n')
+            self.assertEqual(next(stream), 'data: {"type":"progress","stage":"preparing"}\n\n')
+            self.assertEqual(next(stream), 'data: {"type":"progress","stage":"processing"}\n\n')
+            self.assertEqual(next(stream), ": keep-alive\n\n")
+            self.assertTrue(started.wait(timeout=1))
+            release.set()
+            self.assertEqual(next(stream), 'data: {"type":"complete","answer":"Đã xong."}\n\n')
+            self.assertGreaterEqual(close_connections.call_count, 2)
 
     def test_stream_operation_converts_worker_exception_to_error_event(self):
         def operation():
@@ -210,6 +221,54 @@ class ChatViewTests(APITestCase):
         payload = mock_ask.call_args.kwargs
         self.assertEqual(payload["question"], "Lá mai bị vàng thì phải làm sao?")
         self.assertEqual(payload["history"], [])
+
+    @patch("history.views.RagClient.ask_text")
+    def test_chat_stream_emits_progress_and_complete_after_persistence(self, mock_ask):
+        mock_ask.return_value = RagSuccess(
+            answer="Bạn nên kiểm tra độ ẩm đất.",
+            request_id="req-stream-1",
+        )
+
+        with patch("history.views.stream_operation", inline_stream_operation):
+            response = self.client.post(
+                reverse("history-chat-stream", args=[self.history.id]),
+                {"question": "Lá mai bị vàng thì làm sao?"},
+                format="json",
+                HTTP_X_REQUEST_ID="req-stream-1",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        body = b"".join(response.streaming_content).decode("utf-8")
+        self.assertLess(body.index('"stage":"preparing"'), body.index('"stage":"processing"'))
+        self.assertLess(body.index('"stage":"processing"'), body.index('"type":"complete"'))
+        self.assertIn('"answer":"Bạn nên kiểm tra độ ẩm đất."', body)
+        self.assertIn('"history_id":%d' % self.history.id, body)
+        self.assertTrue(response["Content-Type"].startswith("text/event-stream"))
+        self.assertEqual(response["X-Request-ID"], "req-stream-1")
+        self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 2)
+
+    @patch("history.views.RagClient.ask_text")
+    def test_chat_stream_emits_error_and_marks_message_failed(self, mock_ask):
+        mock_ask.return_value = ServiceFailure(
+            code="rag_timeout",
+            message="AI service phản hồi quá thời gian cho phép.",
+            status_code=504,
+            request_id="req-stream-error",
+        )
+
+        with patch("history.views.stream_operation", inline_stream_operation):
+            response = self.client.post(
+                reverse("history-chat-stream", args=[self.history.id]),
+                {"question": "Cây mai bị bệnh gì?"},
+                format="json",
+                HTTP_X_REQUEST_ID="req-stream-error",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        body = b"".join(response.streaming_content).decode("utf-8")
+        self.assertIn('"type":"error"', body)
+        self.assertIn('"code":"rag_timeout"', body)
+        self.assertEqual(ChatMessage.objects.get(history=self.history).processing_status, "failed")
 
     @patch("history.views.RagClient.ask_text")
     def test_chat_returns_503_when_fastapi_is_unavailable(self, mock_ask):
@@ -353,6 +412,71 @@ class ChatViewTests(APITestCase):
         self.assertEqual(user_msg.processing_status, "complete")
         self.assertEqual(assistant_msg.processing_status, "complete")
         self.assertEqual(assistant_msg.reply_to_id, user_msg.id)
+
+    @patch("history.views.RagClient.ask_image")
+    @patch("history.views.YoloClient.predict")
+    def test_image_chat_stream_emits_complete_with_detections(self, mock_predict, mock_ask_image):
+        detection = YoloDetection(
+            class_id=4,
+            name="dom-la",
+            confidence=0.89,
+            bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+        )
+        mock_predict.return_value = YoloSuccess(
+            detections=(detection,), request_id="req-image-stream"
+        )
+        mock_ask_image.return_value = RagSuccess(
+            answer="Lá có dấu hiệu đốm lá.",
+            request_id="req-image-stream",
+            detections=(RagDetection(
+                class_id=4,
+                name="dom-la",
+                disease_name="Đốm lá",
+                confidence=0.89,
+                bbox_xyxy=(1.0, 2.0, 3.0, 4.0),
+            ),),
+        )
+
+        with patch("history.views.stream_operation", inline_stream_operation):
+            response = self.client.post(
+                reverse("history-image-chat-stream", args=[self.history.id]),
+                {"image": image_file(), "question": "Bệnh này là gì?"},
+                format="multipart",
+                HTTP_X_REQUEST_ID="req-image-stream",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        body = b"".join(response.streaming_content).decode("utf-8")
+        self.assertIn('"stage":"preparing"', body)
+        self.assertIn('"stage":"processing"', body)
+        self.assertIn('"type":"complete"', body)
+        self.assertIn('"disease_name":"Đốm lá"', body)
+        user_msg = ChatMessage.objects.get(history=self.history, role="user")
+        self.assertTrue(user_msg.has_image)
+        self.assertEqual(user_msg.processing_status, "complete")
+
+    @patch("history.views.YoloClient.predict")
+    def test_image_chat_stream_emits_yolo_error_without_assistant_message(self, mock_predict):
+        mock_predict.return_value = ServiceFailure(
+            code="yolo_unavailable",
+            message="Không thể kết nối tới YOLO service.",
+            status_code=503,
+            request_id="req-image-stream-error",
+        )
+
+        with patch("history.views.stream_operation", inline_stream_operation):
+            response = self.client.post(
+                reverse("history-image-chat-stream", args=[self.history.id]),
+                {"image": image_file()},
+                format="multipart",
+                HTTP_X_REQUEST_ID="req-image-stream-error",
+            )
+
+        body = b"".join(response.streaming_content).decode("utf-8")
+        self.assertIn('"type":"error"', body)
+        self.assertIn('"code":"yolo_unavailable"', body)
+        self.assertEqual(ChatMessage.objects.filter(history=self.history).count(), 1)
+        self.assertEqual(ChatMessage.objects.get(history=self.history).processing_status, "failed")
 
     @patch("history.views.YoloClient.predict")
     def test_image_view_returns_safe_yolo_failure_without_assistant_message(self, mock_predict):

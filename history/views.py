@@ -9,6 +9,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import StreamingHttpResponse
 
 from .models import ChatMessage, HistoryChat
 from .serializers import (
@@ -19,6 +20,7 @@ from .serializers import (
 )
 from .services.contracts import RagDetection, ServiceFailure
 from .services.rag_client import RagClient
+from .services.sse import stream_operation
 from .services.yolo_client import YoloClient
 
 
@@ -156,6 +158,34 @@ def _detection_payload(detections: tuple[RagDetection, ...]):
     } for detection in detections]
 
 
+def _stream_response(stream, request_id: str) -> StreamingHttpResponse:
+    response = StreamingHttpResponse(stream, content_type="text/event-stream; charset=utf-8")
+    response["Cache-Control"] = "no-cache"
+    response["Connection"] = "keep-alive"
+    response["X-Accel-Buffering"] = "no"
+    response["X-Request-ID"] = request_id
+    return response
+
+
+def _stream_failure_payload(failure, request_id: str) -> dict:
+    return {
+        "type": "error",
+        "code": failure.code,
+        "message": failure.message,
+        "request_id": request_id,
+    }
+
+
+def _stream_exception_payload(error: Exception, request_id: str) -> dict:
+    del error
+    return {
+        "type": "error",
+        "code": "internal_error",
+        "message": "Không thể xử lý yêu cầu.",
+        "request_id": request_id,
+    }
+
+
 class ChatView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -291,6 +321,180 @@ class ImageChatView(APIView):
             },
             status=status.HTTP_200_OK,
             headers={"X-Request-ID": request_id},
+        )
+
+
+class ChatStreamView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        serializer = ChatRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        question = serializer.validated_data["question"]
+        try:
+            history = HistoryChat.objects.get(id=pk, user=request.user)
+        except HistoryChat.DoesNotExist:
+            return Response({"detail": "Không tìm thấy cuộc trò chuyện."}, status=status.HTTP_404_NOT_FOUND)
+
+        request_id = _request_id(request)
+        user_msg = ChatMessage.objects.create(
+            history=history,
+            role="user",
+            content=question,
+            processing_status="pending",
+        )
+
+        def operation():
+            try:
+                result = RagClient().ask_text(
+                    question=question,
+                    history=_history_before_current_user_message(history, user_msg.id),
+                    request_id=request_id,
+                )
+                if isinstance(result, ServiceFailure):
+                    _mark_user_message_failed(user_msg)
+                    return _stream_failure_payload(result, request_id)
+                with transaction.atomic():
+                    assistant_msg = ChatMessage(
+                        history=history,
+                        role="assistant",
+                        content=result.answer,
+                        processing_status="complete",
+                        reply_to=user_msg,
+                    )
+                    assistant_msg.full_clean()
+                    assistant_msg.save()
+                    user_msg.processing_status = "complete"
+                    user_msg.save(update_fields=["processing_status"])
+                    history.save(update_fields=["updated_at"])
+                return {
+                    "type": "complete",
+                    "answer": result.answer,
+                    "history_id": history.id,
+                    "detections": [],
+                    "request_id": request_id,
+                }
+            except Exception as error:
+                _mark_user_message_failed(user_msg)
+                return _stream_exception_payload(error, request_id)
+
+        return _stream_response(
+            stream_operation(
+                operation,
+                progress_payloads=(
+                    {
+                        "type": "progress",
+                        "stage": "preparing",
+                        "message": "Đang chuẩn bị câu hỏi...",
+                        "request_id": request_id,
+                    },
+                    {
+                        "type": "progress",
+                        "stage": "processing",
+                        "message": "MaiCare đang phân tích thông tin...",
+                        "request_id": request_id,
+                    },
+                ),
+                error_payload=lambda error: _stream_exception_payload(error, request_id),
+            ),
+            request_id,
+        )
+
+
+class ImageChatStreamView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk):
+        serializer = ImageChatRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        image = serializer.validated_data["image"]
+        question = serializer.validated_data.get("question", "").strip()
+        try:
+            history = HistoryChat.objects.get(id=pk, user=request.user)
+        except HistoryChat.DoesNotExist:
+            return Response({"detail": "Không tìm thấy cuộc trò chuyện."}, status=status.HTTP_404_NOT_FOUND)
+
+        request_id = _request_id(request)
+        image.seek(0)
+        image_bytes = image.read()
+        filename = image.name
+        content_type = image.content_type
+        user_msg = ChatMessage.objects.create(
+            history=history,
+            role="user",
+            content=question,
+            processing_status="pending",
+        )
+
+        def operation():
+            try:
+                yolo_result = YoloClient().predict(
+                    image_bytes=image_bytes,
+                    filename=filename,
+                    content_type=content_type,
+                    request_id=request_id,
+                )
+                if isinstance(yolo_result, ServiceFailure):
+                    _mark_user_message_failed(user_msg)
+                    return _stream_failure_payload(yolo_result, request_id)
+                rag_result = RagClient().ask_image(
+                    question=question,
+                    history=_history_before_current_user_message(history, user_msg.id),
+                    detections=yolo_result.detections,
+                    request_id=request_id,
+                )
+                if isinstance(rag_result, ServiceFailure):
+                    _mark_user_message_failed(user_msg)
+                    return _stream_failure_payload(rag_result, request_id)
+                detections_payload = _detection_payload(rag_result.detections)
+                with transaction.atomic():
+                    assistant_msg = ChatMessage(
+                        history=history,
+                        role="assistant",
+                        content=rag_result.answer,
+                        processing_status="complete",
+                        reply_to=user_msg,
+                    )
+                    assistant_msg.full_clean()
+                    assistant_msg.save()
+                    user_msg.has_image = True
+                    user_msg.detections = detections_payload
+                    user_msg.processing_status = "complete"
+                    user_msg.save(update_fields=["has_image", "detections", "processing_status"])
+                    history.save(update_fields=["updated_at"])
+                return {
+                    "type": "complete",
+                    "question": question,
+                    "answer": rag_result.answer,
+                    "history_id": history.id,
+                    "detections": detections_payload,
+                    "request_id": request_id,
+                }
+            except Exception as error:
+                _mark_user_message_failed(user_msg)
+                return _stream_exception_payload(error, request_id)
+
+        return _stream_response(
+            stream_operation(
+                operation,
+                progress_payloads=(
+                    {
+                        "type": "progress",
+                        "stage": "preparing",
+                        "message": "Đang chuẩn bị ảnh...",
+                        "request_id": request_id,
+                    },
+                    {
+                        "type": "progress",
+                        "stage": "processing",
+                        "message": "MaiCare đang phân tích hình ảnh...",
+                        "request_id": request_id,
+                    },
+                ),
+                error_payload=lambda error: _stream_exception_payload(error, request_id),
+            ),
+            request_id,
         )
 
 
