@@ -24,3 +24,12 @@ class UserSerialzer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'name', 'email', 'is_staff', 'date_joined')
         read_only_fields = ('id', 'username', 'is_staff', 'data_joined')
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(PasswordResetRequestSerializer):
+    otp = serializers.RegexField(r'^\d{6}$')
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
